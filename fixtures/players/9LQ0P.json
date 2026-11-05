@@ -1,0 +1,294 @@
+{
+  "tag": "#9LQ0P",
+  "name": "Me",
+  "trophies": 41234,
+  "highestTrophies": 42000,
+  "brawlers": [
+    {
+      "id": 16000000,
+      "name": "SHELLY",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000000,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001000,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000001,
+      "name": "COLT",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000010,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001010,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000002,
+      "name": "BULL",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000020,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001020,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000003,
+      "name": "BROCK",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000030,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001030,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000004,
+      "name": "RICO",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000040,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001040,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000005,
+      "name": "SPIKE",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000050,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001050,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000006,
+      "name": "BARLEY",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000060,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001060,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000007,
+      "name": "JESSIE",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000070,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001070,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000008,
+      "name": "NITA",
+      "power": 11,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000080,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001080,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000009,
+      "name": "DYNAMIKE",
+      "power": 8,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000090,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001090,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    },
+    {
+      "id": 16000010,
+      "name": "EL PRIMO",
+      "power": 8,
+      "rank": 30,
+      "trophies": 900,
+      "highestTrophies": 1000,
+      "gadgets": [
+        {
+          "id": 23000100,
+          "name": "GADGET 1"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001100,
+          "name": "STAR POWER 1"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "DAMAGE"
+        }
+      ]
+    }
+  ]
+}

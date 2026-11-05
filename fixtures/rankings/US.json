@@ -1,0 +1,55 @@
+{
+  "items": [
+    {
+      "tag": "#2PQ04",
+      "name": "Eli",
+      "trophies": 80000,
+      "rank": 1
+    },
+    {
+      "tag": "#2PQ05",
+      "name": "Fay",
+      "trophies": 79000,
+      "rank": 2
+    },
+    {
+      "tag": "#2PQ06",
+      "name": "Gus",
+      "trophies": 78000,
+      "rank": 3
+    },
+    {
+      "tag": "#2PQ07",
+      "name": "Hal",
+      "trophies": 77000,
+      "rank": 4
+    },
+    {
+      "tag": "#2PQ08",
+      "name": "Ivy",
+      "trophies": 76000,
+      "rank": 5
+    },
+    {
+      "tag": "#2PQ09",
+      "name": "Jo",
+      "trophies": 75000,
+      "rank": 6
+    },
+    {
+      "tag": "#2PQY0",
+      "name": "Kai",
+      "trophies": 74000,
+      "rank": 7
+    },
+    {
+      "tag": "#2PQYY",
+      "name": "Lu",
+      "trophies": 73000,
+      "rank": 8
+    }
+  ],
+  "paging": {
+    "cursors": {}
+  }
+}

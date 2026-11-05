@@ -1,0 +1,24 @@
+{
+  "name": "brawl-draft-coach",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live drafting coach for Brawl Stars ranked",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "verify-key": "tsx scripts/verify-key.ts",
+    "inspect": "tsx scripts/inspect.ts",
+    "mock": "tsx mock/server.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.2.0"
+  }
+}

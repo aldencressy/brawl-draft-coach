@@ -1,0 +1,343 @@
+{
+  "items": [
+    {
+      "id": 16000000,
+      "name": "SHELLY",
+      "gadgets": [
+        {
+          "id": 23000000,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000001,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001000,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001001,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000001,
+      "name": "COLT",
+      "gadgets": [
+        {
+          "id": 23000010,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000011,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001010,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001011,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000002,
+      "name": "BULL",
+      "gadgets": [
+        {
+          "id": 23000020,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000021,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001020,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001021,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000003,
+      "name": "BROCK",
+      "gadgets": [
+        {
+          "id": 23000030,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000031,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001030,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001031,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000004,
+      "name": "RICO",
+      "gadgets": [
+        {
+          "id": 23000040,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000041,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001040,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001041,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000005,
+      "name": "SPIKE",
+      "gadgets": [
+        {
+          "id": 23000050,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000051,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001050,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001051,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000006,
+      "name": "BARLEY",
+      "gadgets": [
+        {
+          "id": 23000060,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000061,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001060,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001061,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000007,
+      "name": "JESSIE",
+      "gadgets": [
+        {
+          "id": 23000070,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000071,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001070,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001071,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000008,
+      "name": "NITA",
+      "gadgets": [
+        {
+          "id": 23000080,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000081,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001080,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001081,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000009,
+      "name": "DYNAMIKE",
+      "gadgets": [
+        {
+          "id": 23000090,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000091,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001090,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001091,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000010,
+      "name": "EL PRIMO",
+      "gadgets": [
+        {
+          "id": 23000100,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000101,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001100,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001101,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000011,
+      "name": "MORTIS",
+      "gadgets": [
+        {
+          "id": 23000110,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000111,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001110,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001111,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000012,
+      "name": "CROW",
+      "gadgets": [
+        {
+          "id": 23000120,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000121,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001120,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001121,
+          "name": "STAR POWER 2"
+        }
+      ]
+    },
+    {
+      "id": 16000013,
+      "name": "POCO",
+      "gadgets": [
+        {
+          "id": 23000130,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000131,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23001130,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23001131,
+          "name": "STAR POWER 2"
+        }
+      ]
+    }
+  ],
+  "paging": {
+    "cursors": {}
+  }
+}
