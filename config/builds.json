@@ -1,14 +1,603 @@
 {
-  "_help": "Recommended builds, shown with each suggestion. Battle logs don't record builds, so these are hand-written. Use the item names as they appear in the game (case doesn't matter); 'npm run outputs' warns about names that don't match a brawler or item. Any field can be left out.",
-
-  "_example": {
-    "Shelly": {
-      "gadget": "Clay Pigeons",
-      "starPower": "Shell Shock",
-      "gears": ["Damage", "Shield"],
-      "note": "Bush control maps"
+  "_help": "Recommended builds, shown with each suggestion. Battle logs don't record builds, so these come from community build data: the most-picked gadget, star power and two gears on noff.gg (November 2026). 'alternatives' are gadgets or star powers that were a close second there. Edit freely; names are matched ignoring case and punctuation, and 'npm run outputs' warns about names that don't match. Any field can be left out.",
+  "_source": "https://www.noff.gg/brawl-stars/builds (collected 2026-11-05)",
+  "brawlers": {
+    "8-Bit": {
+      "gadget": "Cheat Cartridge",
+      "starPower": "Boosted Booster",
+      "gears": [
+        "Reload Speed",
+        "Damage"
+      ],
+      "alternatives": [
+        "Extra Credits",
+        "Plugged In"
+      ]
+    },
+    "Amber": {
+      "gadget": "Dancing Flames",
+      "starPower": "Wild Flames",
+      "gears": [
+        "Reload Speed",
+        "Sticky Oil"
+      ],
+      "alternatives": [
+        "Fire Starters",
+        "Scorchin' Siphon"
+      ]
+    },
+    "Angelo": {
+      "gadget": "Stinging Flight",
+      "starPower": "Empower",
+      "gears": [
+        "Shield",
+        "Damage"
+      ]
+    },
+    "Bibi": {
+      "gadget": "Vitamin Booster",
+      "starPower": "Home Run",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Bo": {
+      "gadget": "Super Totem",
+      "starPower": "Snare A Bear",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Tripwire"
+      ]
+    },
+    "Bolt": {
+      "gadget": "Oil Change",
+      "starPower": "Unstoppaball",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Bouncy Ball",
+        "Toss Up"
+      ],
+      "note": "Few community builds (50)"
+    },
+    "Brock": {
+      "gadget": "Rocket Laces",
+      "starPower": "Rocket No. 4",
+      "gears": [
+        "Reload Speed",
+        "Shield"
+      ]
+    },
+    "Bull": {
+      "gadget": "Stomper",
+      "starPower": "Tough Guy",
+      "gears": [
+        "Damage",
+        "Health"
+      ],
+      "alternatives": [
+        "Berserker"
+      ]
+    },
+    "Buzz": {
+      "gadget": "Reserve Buoy",
+      "starPower": "Eyes Sharp",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Carl": {
+      "gadget": "Flying Hook",
+      "starPower": "Protective Pirouette",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Heat Ejector"
+      ]
+    },
+    "Chester": {
+      "gadget": "Spicy Dice",
+      "starPower": "Single Bell'O'Mania",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Candy Beans"
+      ]
+    },
+    "Chuck": {
+      "gadget": "Rerouting",
+      "starPower": "Pit Stop",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Ghost Train"
+      ]
+    },
+    "Clancy": {
+      "gadget": "Snappy Shooting",
+      "starPower": "Pumping Up",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Tactical Retreat",
+        "Recon"
+      ]
+    },
+    "Cordelius": {
+      "gadget": "Poison Mushroom",
+      "starPower": "Comboshrooms",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Crow": {
+      "gadget": "Slowing Toxin",
+      "starPower": "Extra Toxic",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Instapoison",
+        "Carrion Crow"
+      ]
+    },
+    "Damian": {
+      "gadget": "Spiritual Healing",
+      "starPower": "Vulgar Display of Punch",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Wall of Sound"
+      ],
+      "note": "Few community builds (69)"
+    },
+    "Darryl": {
+      "gadget": "Recoiling Rotator",
+      "starPower": "Steel Hoops",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Tar Barrel",
+        "Rolling Reload"
+      ]
+    },
+    "Doug": {
+      "gadget": "Extra Mustard",
+      "starPower": "Self Service",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Dynamike": {
+      "gadget": "Satchel Charge",
+      "starPower": "Dyna-Jump",
+      "gears": [
+        "Shield",
+        "Gadget Cooldown"
+      ],
+      "alternatives": [
+        "Demolition"
+      ]
+    },
+    "Edgar": {
+      "gadget": "Let's Fly",
+      "starPower": "Hard Landing",
+      "gears": [
+        "Shield",
+        "Super Charge"
+      ],
+      "alternatives": [
+        "Hardcore",
+        "Fisticuffs"
+      ]
+    },
+    "El Primo": {
+      "gadget": "Suplex Supplement",
+      "starPower": "El Fuego",
+      "gears": [
+        "Super Charge",
+        "Damage"
+      ],
+      "alternatives": [
+        "Meteor Rush"
+      ]
+    },
+    "Emz": {
+      "gadget": "Friendzoner",
+      "starPower": "Bad Karma",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Eve": {
+      "gadget": "Gotta Go!",
+      "starPower": "Happy Surprise",
+      "gears": [
+        "Quadruplets",
+        "Reload Speed"
+      ],
+      "note": "Few community builds (70)"
+    },
+    "Frank": {
+      "gadget": "Irresistible Attraction",
+      "starPower": "Power Grab",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Sponge"
+      ]
+    },
+    "Gigi": {
+      "gadget": "Longer Strings",
+      "starPower": "A Helping Hand",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "note": "Few community builds (36)"
+    },
+    "Griff": {
+      "gadget": "Piggy Bank",
+      "starPower": "Business Resilience",
+      "gears": [
+        "Reload Speed",
+        "Damage"
+      ],
+      "alternatives": [
+        "Coin Shower",
+        "Keep The Change"
+      ]
+    },
+    "Grom": {
+      "gadget": "Radio Check",
+      "starPower": "X-Factor",
+      "gears": [
+        "Shield",
+        "Damage"
+      ]
+    },
+    "Hank": {
+      "gadget": "Barricade",
+      "starPower": "It's Gonna Blow",
+      "gears": [
+        "Damage",
+        "Health"
+      ]
+    },
+    "Jessie": {
+      "gadget": "Recoil Spring",
+      "starPower": "Energize",
+      "gears": [
+        "Pet Power",
+        "Shield"
+      ],
+      "alternatives": [
+        "Shocky"
+      ]
+    },
+    "Kenji": {
+      "gadget": "Hosomaki Healing",
+      "starPower": "Nigiri Nemesis",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Leon": {
+      "gadget": "Clone Projector",
+      "starPower": "Invisiheal",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Lollipop Drop",
+        "Smoke Trails"
+      ]
+    },
+    "Lou": {
+      "gadget": "Cryo Syrup",
+      "starPower": "Hypothermia",
+      "gears": [
+        "Super Charge",
+        "Shield"
+      ],
+      "alternatives": [
+        "Supercool"
+      ]
+    },
+    "Mandy": {
+      "gadget": "Cookie Crumbs",
+      "starPower": "In My Sights",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Hard Candy"
+      ]
+    },
+    "Meeple": {
+      "gadget": "Mansions of Meeple",
+      "starPower": "Do Not Pass Go",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Ragequit",
+        "Rule Bending"
+      ]
+    },
+    "Mico": {
+      "gadget": "Clipping Scream",
+      "starPower": "Monkey Business",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Moe": {
+      "gadget": "Dodgy Digging",
+      "starPower": "Skipping Stones",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Rat Race"
+      ]
+    },
+    "Mortis": {
+      "gadget": "Creature of the Night",
+      "starPower": "Coiled Snake",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Combo Spinner"
+      ]
+    },
+    "Mr. P": {
+      "gadget": "Service Bell",
+      "starPower": "Revolving Door",
+      "gears": [
+        "Pet Power",
+        "Damage"
+      ],
+      "alternatives": [
+        "Porter Reinforcements",
+        "Handle With Care"
+      ]
+    },
+    "Najia": {
+      "gadget": "Poison Puddles",
+      "starPower": "Poisonous Protector",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Najia Jar"
+      ],
+      "note": "Few community builds (58)"
+    },
+    "Nita": {
+      "gadget": "Bear Paws",
+      "starPower": "Hyper Bear",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Faux Fur",
+        "Bear With Me"
+      ]
+    },
+    "Nori": {
+      "gadget": "Sushi Snack",
+      "starPower": "Big Haul",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Gonna Need a Bigger Net",
+        "His Mother's Son"
+      ],
+      "note": "Few community builds (75)"
+    },
+    "Otis": {
+      "gadget": "Phat Splatter",
+      "starPower": "Ink Refills",
+      "gears": [
+        "Super Charge",
+        "Damage"
+      ]
+    },
+    "Penny": {
+      "gadget": "Salty Barrel",
+      "starPower": "Heavy Coffers",
+      "gears": [
+        "Pet Power",
+        "Shield"
+      ],
+      "alternatives": [
+        "Trusty Spyglass",
+        "Master Blaster"
+      ]
+    },
+    "Pierce": {
+      "gadget": "You Only Brawl Twice",
+      "starPower": "Mission: Swimpossible",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Bottomless Mags"
+      ],
+      "note": "Few community builds (76)"
+    },
+    "Piper": {
+      "gadget": "Auto Aimer",
+      "starPower": "Snappy Sniping",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Ambush"
+      ]
+    },
+    "R-T": {
+      "gadget": "Out of Line",
+      "starPower": "Recording",
+      "gears": [
+        "Damage",
+        "Shield"
+      ]
+    },
+    "Rico": {
+      "gadget": "Multiball Launcher",
+      "starPower": "Super Bouncy",
+      "gears": [
+        "Reload Speed",
+        "Damage"
+      ]
+    },
+    "Shade": {
+      "gadget": "Longarms",
+      "starPower": "Hardened Hoodie",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Spooky Speedster"
+      ]
+    },
+    "Sirius": {
+      "gadget": "A Starr Is Born",
+      "starPower": "The Darkest Starr",
+      "gears": [
+        "Shield",
+        "Damage"
+      ]
+    },
+    "Spike": {
+      "gadget": "Life Plant",
+      "starPower": "Curveball",
+      "gears": [
+        "Shield",
+        "Damage"
+      ],
+      "alternatives": [
+        "Popping Pincushion"
+      ]
+    },
+    "Sprout": {
+      "gadget": "Transplant",
+      "starPower": "Overgrowth",
+      "gears": [
+        "Super Charge",
+        "Shield"
+      ],
+      "alternatives": [
+        "Photosynthesis"
+      ]
+    },
+    "Squeak": {
+      "gadget": "Windup",
+      "starPower": "Chain Reaction",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Residue",
+        "Super Sticky"
+      ]
+    },
+    "Starr Nova": {
+      "gadget": "Shining Starr of Friendship and Justice",
+      "starPower": "Power Level: Maximum",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "Floaty Time"
+      ],
+      "note": "Few community builds (54)"
+    },
+    "Surge": {
+      "gadget": "Power Shield",
+      "starPower": "Serve Ice Cold",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "alternatives": [
+        "To The Max!"
+      ]
+    },
+    "Tara": {
+      "gadget": "Support From Beyond",
+      "starPower": "Black Portal",
+      "gears": [
+        "Pet Power",
+        "Shield"
+      ],
+      "alternatives": [
+        "Healing Shade"
+      ]
+    },
+    "Tick": {
+      "gadget": "Last Hurrah",
+      "starPower": "Well Oiled",
+      "gears": [
+        "Thicc Head",
+        "Shield"
+      ],
+      "alternatives": [
+        "Mine Mania"
+      ]
+    },
+    "Wendy": {
+      "gadget": "Wind-Powered",
+      "starPower": "Solar Shield",
+      "gears": [
+        "Damage",
+        "Shield"
+      ],
+      "note": "Few community builds (34)"
     }
-  },
-
-  "brawlers": {}
+  }
 }

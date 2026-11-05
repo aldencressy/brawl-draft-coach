@@ -131,8 +131,11 @@ Sources:
   (`cache/brawlapi.json`); if it's down, the cached copy is used.
 - **`config/roles.json`** (edit me): each brawler gets the roles for its class, plus any you list for
   it by name.
-- **`config/builds.json`** (edit me): recommended builds by item name. Battle logs don't record
-  builds, so these are hand-written.
+- **`config/builds.json`**: recommended builds by item name for your 57 power-11 brawlers. Battle
+  logs don't record builds, so these come from community build data: the most-picked gadget, star
+  power and two gears on [noff.gg](https://www.noff.gg/brawl-stars/builds) (November 2026), with
+  close seconds as `alternatives`. Edit any you play differently; refresh them after big balance
+  changes.
 - **Your battle log**: fetched every run; your ranked games accumulate in `me.json` with no time
   limit.
 
@@ -148,20 +151,27 @@ works at phone width.
 first), then press <kbd>1</kbd>–<kbd>6</kbd> for your pick slot.
 
 **Entering the draft:** focus stays in the search box. Type a few letters and press
-<kbd>Enter</kbd>; the brawler goes where the draft expects next:
+<kbd>Enter</kbd>; the brawler goes where the draft expects next, following the pick order from
+your side, including your own pick.
 
-- **Bans** first. After 6 they close automatically; press <kbd>Enter</kbd> on an empty box to end
-  them early (duplicate bans).
-- **Picks** then follow the draft order from your side, including your own pick.
-- Override where an entry goes with a prefix (`-crow` enemy, `+gene` ally, `!colt` ban), with
-  <kbd>Tab</kbd>, or with the Ban / Ally / Enemy buttons.
+- **No bans to enter.** The draft starts at picks. If a suggestion turns out to be banned, take the
+  next one. (To record a ban anyway, type it with `!`, e.g. `!colt`.)
+- Override where an entry goes with a prefix (`-crow` enemy, `+gene` ally), with <kbd>Tab</kbd>,
+  or with the Ally / Enemy buttons.
 - <kbd>↑</kbd>/<kbd>↓</kbd> choose among matches, <kbd>Esc</kbd> clears, <kbd>Ctrl</kbd>+<kbd>Z</kbd>
   undoes. Click a placed brawler or ban to remove it. Clicking a portrait also adds it.
 
 The draft is saved in the browser on every entry, so a refresh doesn't lose it.
 
-**Suggestions** for your slot update on every entry: score, reasons, warning, build and the score
-breakdown, plus the next five. After you lock in, your pick is marked with where it ranked.
+**Suggestions** for your slot update on every entry: score, reasons, warning, the brawler's win
+rate, games and pick rate on the map, the score breakdown, and its build:
+
+- **Gadget** and **Star power**: all of its options, with the recommended one in gold and a close
+  second dashed. Hover an item for its description.
+- **Gears**: the two recommended ones, plus Hypercharge if you own it.
+- Items you don't own are struck through, with a note if the recommended build needs one.
+
+After you lock in, your pick is marked with where it ranked.
 
 **Draft log:** each draft with your pick is saved in the browser: map, slot, bans, picks, your
 pick and the suggestions at that moment. "Export draft log" downloads it as JSON, for checking later

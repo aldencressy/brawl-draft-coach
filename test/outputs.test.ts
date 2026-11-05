@@ -38,7 +38,7 @@ describe("buildStatic", () => {
     official,
     fixtureBrawlApi(),
     roles,
-    { brawlers: { Shelly: { gadget: "gadget 1", starPower: "Star Power 2", gears: ["Damage", "Nope"], note: "test" } } },
+    { brawlers: { Shelly: { gadget: "gadget 1", starPower: "Star Power 2", gears: ["Damage", "Nope"], alternatives: ["Gadget 2"], note: "test" } } },
     now,
     (m) => warnings.push(m),
   );
@@ -59,7 +59,7 @@ describe("buildStatic", () => {
 
   it("resolves builds.json names to item ids and warns about typos", () => {
     const shelly = byName("Shelly");
-    expect(shelly.build).toEqual({ gadget: 23000001, starPower: 23100002, gears: [62000002], note: "test" });
+    expect(shelly.build).toEqual({ gadget: 23000001, starPower: 23100002, gears: [62000002], alternatives: [23000002], note: "test" });
     expect(warnings).toContain('builds.json: Shelly has no gear "Nope"');
   });
 

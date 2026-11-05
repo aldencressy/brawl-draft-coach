@@ -154,7 +154,7 @@ describe("recommend: output", () => {
 
   it("includes the hand-written build by name", () => {
     const hunter = rec.candidates.find((c) => c.id === B.Hunter)!;
-    expect(hunter.build).toEqual({ gadget: "Hunter Gadget", starPower: undefined, gears: [], note: "test build" });
+    expect(hunter.build).toEqual({ gadget: "Hunter Gadget", starPower: undefined, gears: [], alternatives: [], note: "test build" });
   });
 });
 

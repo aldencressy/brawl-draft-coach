@@ -82,7 +82,7 @@ export interface ScoredCandidate {
   /** The biggest threat still available to the enemy, if any is worth mentioning. */
   warning?: string;
   lowData: boolean;
-  build?: { gadget?: string; starPower?: string; gears: string[]; note?: string };
+  build?: { gadget?: string; starPower?: string; gears: string[]; alternatives: string[]; note?: string };
   details: {
     mapWinRate: number;
     mapGames: number;

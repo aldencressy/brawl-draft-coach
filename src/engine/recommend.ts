@@ -229,6 +229,7 @@ function buildNames(b: StaticBrawler): ScoredCandidate["build"] {
     gadget: name(b.gadgets, b.build.gadget),
     starPower: name(b.starPowers, b.build.starPower),
     gears: (b.build.gears ?? []).map((g) => name(b.gears, g)).filter((n): n is string => !!n),
+    alternatives: (b.build.alternatives ?? []).map((a) => name([...b.gadgets, ...b.starPowers], a)).filter((n): n is string => !!n),
     note: b.build.note,
   };
 }

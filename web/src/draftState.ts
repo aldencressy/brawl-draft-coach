@@ -12,9 +12,8 @@ export interface Pick {
 export interface DraftState {
   mapId: number | null;
   mySlot: number | null;
+  /** Optional: entered only with the "!" prefix. The draft starts straight at picks. */
   bans: number[];
-  /** Set when bans are finished early (duplicate bans mean fewer than 6). */
-  bansDone: boolean;
   picks: Pick[];
   /** Snapshot of the suggestions when your pick was entered, for the draft log. */
   suggestedAtMyPick: number[] | null;
@@ -28,15 +27,11 @@ export const MAX_BANS = 6;
 export const PICKS = 6;
 
 export function newDraft(): DraftState {
-  return { mapId: null, mySlot: null, bans: [], bansDone: false, picks: [], suggestedAtMyPick: null, aiAtMyPick: null, loggedAt: null };
+  return { mapId: null, mySlot: null, bans: [], picks: [], suggestedAtMyPick: null, aiAtMyPick: null, loggedAt: null };
 }
 
 export function myTeam(order: DraftConfig["order"], mySlot: number): Team {
   return order[mySlot - 1]!;
-}
-
-export function bansOpen(s: DraftState): boolean {
-  return !s.bansDone && s.bans.length < MAX_BANS && s.picks.length === 0;
 }
 
 /**
@@ -62,9 +57,8 @@ export function sideOfSlot(order: DraftConfig["order"], mySlot: number, slot: nu
   return order[slot - 1] === myTeam(order, mySlot) ? "ally" : "enemy";
 }
 
-/** Where an entry goes when you don't say: bans first, then picks in draft order. */
-export function expectedTarget(order: DraftConfig["order"], s: DraftState): Target | null {
-  if (bansOpen(s)) return "ban";
+/** Where an entry goes when you don't say: the next pick in draft order. */
+export function expectedTarget(order: DraftConfig["order"], s: DraftState): Side | null {
   const slot = nextSlot(order, s);
   return slot && s.mySlot ? sideOfSlot(order, s.mySlot, slot) : null;
 }
@@ -89,19 +83,15 @@ export function add(order: DraftConfig["order"], s: DraftState, id: number, targ
   const to = target ?? expectedTarget(order, s);
   if (!to) return { ok: false, reason: "The draft is complete" };
   if (to === "ban") {
-    if (s.picks.length) return { ok: false, reason: "Picks have started; bans are closed" };
     if (s.bans.includes(id)) return { ok: false, reason: "Already banned" };
+    if (s.picks.some((p) => p.id === id)) return { ok: false, reason: "Already picked" };
     if (s.bans.length >= MAX_BANS) return { ok: false, reason: "All bans are in" };
     return { ok: true, state: { ...s, bans: [...s.bans, id] } };
   }
   if (isTaken(s, id)) return { ok: false, reason: s.bans.includes(id) ? "That brawler is banned" : "Already picked" };
   const sideCount = s.picks.filter((p) => p.side === to).length;
   if (sideCount >= PICKS / 2) return { ok: false, reason: `The ${to === "ally" ? "your" : "enemy"} team is full` };
-  return { ok: true, state: { ...s, bansDone: true, picks: [...s.picks, { id, side: to }] } };
-}
-
-export function finishBans(s: DraftState): DraftState {
-  return { ...s, bansDone: true };
+  return { ok: true, state: { ...s, picks: [...s.picks, { id, side: to }] } };
 }
 
 export function remove(s: DraftState, id: number): DraftState {

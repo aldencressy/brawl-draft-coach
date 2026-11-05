@@ -15,6 +15,8 @@ export interface BuildEntry {
   gadget?: string;
   starPower?: string;
   gears?: string[];
+  /** Gadgets or star powers that are a close second. */
+  alternatives?: string[];
   note?: string;
 }
 
@@ -40,7 +42,7 @@ export interface StaticBrawler {
   hyperCharges: StaticItem[];
   gears: StaticItem[];
   /** Hand-written build from builds.json, as item ids. */
-  build?: { gadget?: number; starPower?: number; gears?: number[]; note?: string };
+  build?: { gadget?: number; starPower?: number; gears?: number[]; alternatives?: number[]; note?: string };
 }
 
 export interface StaticData {
@@ -118,6 +120,9 @@ export function buildStatic(
       gadget: find(b.gadgets, entry.gadget, "gadget"),
       starPower: find(b.starPowers, entry.starPower, "star power"),
       gears: (entry.gears ?? []).map((g) => find(b.gears, g, "gear")).filter((id): id is number => id !== undefined),
+      alternatives: (entry.alternatives ?? [])
+        .map((a) => find([...b.gadgets, ...b.starPowers], a, "gadget or star power"))
+        .filter((id): id is number => id !== undefined),
       note: entry.note,
     };
   }

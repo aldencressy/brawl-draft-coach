@@ -170,3 +170,14 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .ai-settings label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); }
 .ai-settings label.check { flex-direction: row; align-items: center; gap: 6px; }
 .ai-settings input[type=password] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+
+/* Build: gadgets and star powers with the recommended one marked, then gears */
+.kit { display: flex; flex-direction: column; gap: 3px; margin: 2px 0; }
+.kit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.kit-label { color: var(--faint); font-size: 11px; width: 62px; flex: none; }
+.chip { font-size: 12px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); cursor: default; }
+.chip.rec { border-color: var(--gold); color: var(--text); background: rgba(245, 184, 46, .12); }
+.chip.alt { border-style: dashed; border-color: rgba(245, 184, 46, .55); }
+.chip.missing { opacity: .45; text-decoration: line-through; }
+.chip.hyper { border-color: #6a4bd6; color: #b9a6ff; }
+.kit-note { color: var(--faint); font-size: 11px; }

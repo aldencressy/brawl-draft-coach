@@ -9,12 +9,9 @@ import type { StaticBrawler, StaticData } from "../../src/outputs/static.js";
 import type { StatsData } from "../../src/outputs/stats.js";
 import {
   add,
-  bansOpen,
   expectedTarget,
-  finishBans,
   isComplete,
   isTaken,
-  MAX_BANS,
   myPickId,
   myTeam,
   newDraft,
@@ -354,7 +351,7 @@ function renderBoard(): void {
     .join("");
   document.getElementById("board")!.innerHTML = `
     <div class="board">${team("ally")}${team("enemy")}</div>
-    <div class="bans">Bans: ${bans || `<span class="fresh">none yet</span>`}</div>`;
+    ${bans ? `<div class="bans">Bans: ${bans}</div>` : ""}`;
   document.querySelectorAll<HTMLElement>("#board [data-remove]").forEach((el) =>
     el.addEventListener("click", () => {
       setState(remove(state, Number(el.dataset.remove)));
@@ -372,8 +369,8 @@ function currentTarget(): Target | null {
 function renderTarget(): void {
   const t = currentTarget();
   const el = document.getElementById("target")!;
-  el.innerHTML = (["ban", "ally", "enemy"] as const)
-    .map((x) => `<button class="${x} ${t === x ? "on" : ""}" data-t="${x}">${x === "ban" ? "Ban" : x === "ally" ? "Ally" : "Enemy"}</button>`)
+  el.innerHTML = (["ally", "enemy"] as const)
+    .map((x) => `<button class="${x} ${t === x ? "on" : ""}" data-t="${x}">${x === "ally" ? "Ally" : "Enemy"}</button>`)
     .join("");
   el.querySelectorAll<HTMLElement>("[data-t]").forEach((b) =>
     b.addEventListener("click", () => {
@@ -390,9 +387,8 @@ function renderTarget(): void {
   }
   const slot = nextSlot(order, state);
   if (isComplete(state)) hint.innerHTML = `Draft complete. Logged. <kbd>New draft</kbd> when you're ready.`;
-  else if (bansOpen(state)) hint.innerHTML = `Ban ${state.bans.length + 1} of ${MAX_BANS} · <kbd>Enter</kbd> on an empty box ends bans early · <kbd>Tab</kbd> switches target`;
   else if (slot === state.mySlot) hint.innerHTML = `<b style="color:var(--gold)">Your pick</b> (pick ${slot}) · enter what you lock in`;
-  else if (slot) hint.innerHTML = `Next: ${sideOfSlot(order, state.mySlot!, slot)} pick (pick ${slot}) · <kbd>-</kbd> enemy <kbd>+</kbd> ally <kbd>!</kbd> ban to override`;
+  else if (slot) hint.innerHTML = `Next: ${sideOfSlot(order, state.mySlot!, slot)} pick (pick ${slot}) · <kbd>-</kbd> enemy <kbd>+</kbd> ally to override`;
 }
 
 function matches(): StaticBrawler[] {
@@ -444,9 +440,6 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
     .filter(([, v]) => v !== 0)
     .map(([k, v]) => `<span class="${v > 0 ? "p" : "n"}">${k} ${signed(v)}</span>`)
     .join("");
-  const build = x.build
-    ? [x.build.gadget, x.build.starPower, ...x.build.gears].filter(Boolean).join(" · ") + (x.build.note ? ` (${x.build.note})` : "")
-    : "";
   const d = x.details;
   const onMap = d.mapGames
     ? `${Math.round(d.mapWinRate * 100)}% win here · ${d.mapGames.toLocaleString()} games · picked in ${Math.round(d.mapPickRate * 100)}%`
@@ -459,10 +452,44 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
     <div class="extra">
       <span class="onmap">${onMap}</span>
       ${x.warning ? `<span class="warn">⚠ ${esc(x.warning)}</span>` : ""}
-      ${build ? `<span>Build: ${esc(build)}</span>` : ""}
+      ${kitHtml(x.id)}
       <span class="parts">${parts}</span>
     </div>
   </div>`;
+}
+
+/**
+ * The brawler's gadgets and star powers with the recommended one marked and the ones you don't
+ * own dimmed, then the recommended gears. Hover an item for its description.
+ */
+function kitHtml(id: number): string {
+  const b = byId.get(id);
+  if (!b) return "";
+  const mine = data.roster?.brawlers.find((r) => r.id === id);
+  const owns = (kind: "gadgets" | "starPowers" | "gears", itemId: number) => !mine || mine[kind].includes(itemId);
+  const alternatives = new Set(b.build?.alternatives ?? []);
+  const chip = (item: { id: number; name: string; description?: string }, kind: "gadgets" | "starPowers" | "gears", recommended: boolean) => {
+    const owned = owns(kind, item.id);
+    const alt = !recommended && alternatives.has(item.id);
+    const tip = [item.description, alt ? "A close second in community builds" : "", owned ? "" : "You don't own this yet"].filter(Boolean).join(" · ");
+    return `<span class="chip ${recommended ? "rec" : ""} ${alt ? "alt" : ""} ${owned ? "" : "missing"}" title="${esc(tip)}">${esc(item.name)}</span>`;
+  };
+  const build = b.build;
+  const row = (label: string, list: typeof b.gadgets, kind: "gadgets" | "starPowers", pick?: number) =>
+    list.length ? `<span class="kit-row"><span class="kit-label">${label}</span>${list.map((i) => chip(i, kind, i.id === pick)).join("")}</span>` : "";
+  const gears = (build?.gears ?? []).map((g) => b.gears.find((i) => i.id === g)).filter((g): g is NonNullable<typeof g> => !!g);
+  const missing = [
+    ...[build?.gadget].filter((g): g is number => g !== undefined && !owns("gadgets", g)).map(() => "gadget"),
+    ...[build?.starPower].filter((g): g is number => g !== undefined && !owns("starPowers", g)).map(() => "star power"),
+    ...gears.filter((g) => !owns("gears", g.id)).map((g) => g.name),
+  ];
+  return `<span class="kit">
+    ${row("Gadget", b.gadgets, "gadgets", build?.gadget)}
+    ${row("Star power", b.starPowers, "starPowers", build?.starPower)}
+    ${gears.length ? `<span class="kit-row"><span class="kit-label">Gears</span>${gears.map((g) => chip(g, "gears", true)).join("")}${mine?.hyperCharges.length ? `<span class="chip hyper" title="You own its hypercharge">Hypercharge</span>` : ""}</span>` : ""}
+    ${build?.note ? `<span class="kit-note">${esc(build.note)}</span>` : ""}
+    ${missing.length ? `<span class="warn">You don't own the recommended ${esc(missing.join(", "))}</span>` : ""}
+  </span>`;
 }
 
 function renderFoot(): void {
@@ -486,13 +513,7 @@ function wireEntry(): void {
     const list = matches().filter((b) => !isTaken(state, b.id));
     if (e.key === "Enter") {
       e.preventDefault();
-      if (!parseEntry(ui.query).query) {
-        if (bansOpen(state) && state.bans.length) {
-          setState(finishBans(state));
-          say("Bans done. Picks next.");
-        }
-        return render();
-      }
+      if (!parseEntry(ui.query).query) return;
       const pick = list[ui.active];
       if (pick) enter(pick.id, parseEntry(ui.query).target);
       else say("No brawler matches", true), renderTarget();
@@ -502,8 +523,7 @@ function wireEntry(): void {
       renderGrid();
     } else if (e.key === "Tab") {
       e.preventDefault();
-      const cycle: Target[] = ["ban", "ally", "enemy"];
-      ui.override = cycle[(cycle.indexOf(currentTarget() ?? "ban") + 1) % 3]!;
+      ui.override = currentTarget() === "ally" ? "enemy" : "ally";
       renderTarget();
     } else if (e.key === "Escape") {
       ui = { ...ui, query: "", active: 0, override: null };
@@ -530,7 +550,6 @@ function maybeAskAi(rec: Recommendation | null, force = false): void {
   if (!rec || !aiSettings.enabled || !aiSettings.apiKey) return;
   const pickedAlready = myPickId(order, state) !== null;
   if (pickedAlready || isComplete(state)) return; // keep showing the answer you picked with
-  if (!force && bansOpen(state)) return; // bans don't change much; wait for picks
   const key = draftKey(rec);
   if (!force && key === ai.key && ai.status !== "error") return;
 
@@ -590,9 +609,7 @@ function renderAi(): void {
       ${t.warning ? `<div class="warn">⚠ ${esc(t.warning)}</div>` : ""}
       ${myPickId(order, state) === null && !isComplete(state) ? `<div class="row"><button id="ai-now">Ask again</button></div>` : ""}`;
   } else {
-    body = bansOpen(state)
-      ? `<div class="fresh">Weighs in once picks start.</div><div class="row"><button id="ai-now">Ask now</button></div>`
-      : `<div class="fresh">Waiting for the draft.</div>`;
+    body = `<div class="fresh">Waiting for the draft.</div><div class="row"><button id="ai-now">Ask now</button></div>`;
   }
 
   el.innerHTML = `<h2><span>AI second opinion</span>${aiSettings.apiKey ? `<a id="ai-gear">${ai.showSettings ? "Done" : "Settings"}</a>` : ""}</h2>${body}`;
