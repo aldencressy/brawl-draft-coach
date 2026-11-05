@@ -3,7 +3,7 @@
 Live drafting coach for Brawl Stars ranked. A collector gathers ranked match stats on a schedule;
 a static page suggests your best pick as you tap in the draft.
 
-Status: **Milestone 3** (static data, roster and the JSON outputs).
+Status: **Milestone 4** (scoring engine).
 
 ## Setup
 
@@ -134,6 +134,49 @@ Sources:
 
 `npm run outputs` warns about names in `roles.json` or `builds.json` that don't match anything.
 
+## Scoring
+
+`recommend(draft, data, weights, draftConfig)` in `src/engine/recommend.ts` is a pure function:
+given the map, your pick slot, bans, ally picks and enemy picks, it scores every brawler you own
+that's still available. Scores are in **win-rate points** (+1 = one percentage point).
+
+| Part | What it measures |
+|---|---|
+| `map` | Smoothed win rate on this map, minus 50% |
+| `counter` | Average edge against each enemy already picked |
+| `synergy` | Average edge with each ally already picked |
+| `risk` | How hard the worst counters still open to the enemy beat it, scaled by enemy picks left after yours |
+| `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles` in weights) |
+| `comfort` | How much better you do on it than everyone else (from your own ranked games) |
+
+Each part is multiplied by its weight for your pick slot (`byPick` in `config/weights.json`) and
+summed. Early picks lean on map strength and low risk; the last pick leans on counters.
+
+**Smoothing.** Win rates are smoothed with `(wins + k × prior) / (games + k)`. The prior for a map
+rate is the brawler's rate on the mode's *other* maps; for that, its rate in *other* modes; then 50%.
+Using only outside games means no game counts twice. `k` values are in `smoothing`; they're high
+because one draft is played as 2–3 games.
+
+**Edges, not raw win rates.** A strong brawler beats most enemies, so a matchup only counts as a
+counter if it beats what the two brawlers' own win rates predict. Same for teammate pairs.
+
+**Output** (`Recommendation` in `src/engine/types.ts`) is plain JSON: the draft context, data
+freshness, and the top `handOffTop` candidates, each with its score, the parts, up to three reason
+tags, a warning (thin data or a dangerous counter), the build from `builds.json`, and the details
+behind each part. The UI shows the first `showTop`; the AI layer (Milestone 6) will get all of them.
+
+**Draft order** is in `config/draft.json`: which team makes each of the six picks.
+
+### Trying it from the terminal
+
+```bash
+git clone -q --depth 1 --branch data https://github.com/aldencressy/brawl-draft-coach.git data
+npm run suggest                                   # lists current ranked maps
+npm run suggest -- --map "hard rock" --slot 6 --ally gene,emz --enemy mortis,crow,bull --ban colt,spike
+```
+
+Add `--json` to see the full output. To refresh the data later: `rm -rf data` and clone again.
+
 ## Without a key: mock server
 
 ```bash
@@ -182,4 +225,4 @@ npm test          # unit tests
 npm run typecheck
 ```
 
-The scoring engine and the draft UI (with Pages setup) come in later milestones.
+The draft UI (with Pages setup) comes in Milestone 5.

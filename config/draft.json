@@ -1,0 +1,4 @@
+{
+  "_help": "Which team makes each of the 6 picks, in order. Default is ranked's snake draft: first team picks 1, second team picks 2, first team picks 2, second team picks 1.",
+  "order": ["first", "second", "second", "first", "first", "second"]
+}

@@ -1,0 +1,49 @@
+{
+  "_help": "Scoring weights. All scores are in win-rate points (+1 = one percentage point better). See README > Scoring for what each part means.",
+
+  "byPick": {
+    "_help": "How much each part counts, by your overall pick slot (1-6). Early picks lean on map strength and being hard to counter; late picks lean on countering what's already picked.",
+    "1": { "map": 1.0, "counter": 0.0, "synergy": 0.0, "risk": 1.0, "role": 0.4, "comfort": 0.5 },
+    "2": { "map": 1.0, "counter": 1.0, "synergy": 0.4, "risk": 0.8, "role": 0.6, "comfort": 0.5 },
+    "3": { "map": 1.0, "counter": 1.0, "synergy": 0.6, "risk": 0.8, "role": 0.6, "comfort": 0.5 },
+    "4": { "map": 0.8, "counter": 1.2, "synergy": 0.8, "risk": 0.5, "role": 0.8, "comfort": 0.5 },
+    "5": { "map": 0.8, "counter": 1.2, "synergy": 0.8, "risk": 0.5, "role": 0.8, "comfort": 0.5 },
+    "6": { "map": 0.7, "counter": 1.5, "synergy": 0.9, "risk": 0.0, "role": 0.8, "comfort": 0.5 }
+  },
+
+  "smoothing": {
+    "_help": "Bayesian smoothing strength, in games. Higher = trust thin data less. Each level is pulled toward the level above it: map -> mode -> all modes -> 50%; matchups and pairs -> what the two brawlers' own win rates predict. A draft is played as 2-3 games, so these are set high: 200 games is only ~80 independent drafts.",
+    "overall": 100,
+    "mode": 150,
+    "map": 200,
+    "pairOverall": 150,
+    "pairMode": 150,
+    "personal": 25
+  },
+
+  "risk": {
+    "_help": "Counter risk = average of the `consider` worst counters still available to the enemy, scaled by enemy picks left after yours (out of 3). Counters with a map win rate under minMapWinRate are ignored as unlikely picks.",
+    "consider": 3,
+    "minMapWinRate": 0.47
+  },
+
+  "roles": {
+    "_help": "Role fit, in win-rate fractions (0.01 = 1 point). fill: per role your team doesn't have yet (max 2). duplicate: per role it already has. answer: per role that answers a role on the enemy team.",
+    "fill": 0.008,
+    "duplicate": 0.01,
+    "ignoreForDuplicates": ["damage"],
+    "answer": 0.01,
+    "answers": {
+      "anti-tank": ["tank"],
+      "anti-thrower": ["thrower"],
+      "wall-breaker": ["thrower"],
+      "assassin": ["thrower", "marksman"]
+    }
+  },
+
+  "minPower": 1,
+  "lowDataGames": 40,
+  "reasonMinPoints": 1.0,
+  "showTop": 5,
+  "handOffTop": 10
+}
