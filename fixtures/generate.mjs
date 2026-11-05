@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const out = dirname(fileURLToPath(import.meta.url));
-for (const d of ["players", "battlelogs", "rankings"]) {
+for (const d of ["players", "battlelogs", "rankings", "brawlapi"]) {
   rmSync(join(out, d), { recursive: true, force: true });
   mkdirSync(join(out, d), { recursive: true });
 }
@@ -87,13 +87,43 @@ write("rankings/global.json", { items: [...others.slice(0, 6), "#2YYYYYYY"].map(
 write("rankings/US.json", { items: [...others.slice(4, 10), "#2LLLLLLL"].map((tag, i) => ({ tag, name: nameOf(tag), trophies: 80000 - i * 1000, rank: i + 1 })) });
 
 const acc = (id, offset, label) => [1, 2].map((n) => ({ id: offset + (id - 16000000) * 10 + n, name: `${label} ${n}` }));
-write("brawlers.json", { items: BRAWLERS.map((b) => ({ ...b, gadgets: acc(b.id, 23000000, "GADGET"), starPowers: acc(b.id, 23100000, "STAR POWER") })) });
+const GEARS = [{ id: 62000000, name: "SPEED", level: 3 }, { id: 62000002, name: "DAMAGE", level: 3 }, { id: 62000004, name: "SHIELD", level: 3 }];
+const hyper = (b) => [{ id: 23200000 + (b.id - 16000000), name: `${b.name} HYPER` }];
+// The official list has one brawler more than BrawlAPI, like the real APIs right after a release.
+const NEW_BRAWLER = { id: 16000099, name: "NEWBIE" };
+write("brawlers.json", {
+  items: [...BRAWLERS, NEW_BRAWLER].map((b) => ({
+    ...b, gadgets: acc(b.id, 23000000, "GADGET"), starPowers: acc(b.id, 23100000, "STAR POWER"), hyperCharges: hyper(b), gears: GEARS,
+  })),
+});
 write(`players/${ME.slice(1)}.json`, {
   tag: ME, name: "Me", trophies: 41234, highestTrophies: 42000,
+  rankedRank: 15, rankedRankName: "MYTHIC III", rankedElo: 6120,
+  highestSeasonRankedRankName: "LEGENDARY I", highestAllTimeRankedRankName: "LEGENDARY I",
   brawlers: BRAWLERS.slice(0, 11).map((b, i) => ({
     ...b, power: i < 9 ? 11 : 8, rank: 30, trophies: 900, highestTrophies: 1000,
     gadgets: acc(b.id, 23000000, "GADGET").slice(0, 1), starPowers: acc(b.id, 23100000, "STAR POWER").slice(0, 1),
-    gears: [{ id: 62000000, name: "DAMAGE" }],
+    hyperCharges: i < 5 ? hyper(b) : [], gears: GEARS.slice(0, 2),
+  })),
+});
+
+// BrawlAPI, in its own shapes (trimmed to the fields we read).
+const CLASSES = ["Damage Dealer", "Damage Dealer", "Tank", "Marksman", "Damage Dealer", "Damage Dealer", "Artillery", "Controller", "Damage Dealer", "Artillery", "Tank", "Assassin", "Assassin", "Support"];
+const describe = (list) => list.map((a) => ({ ...a, name: a.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), description: `What ${a.name} does.` }));
+write("brawlapi/brawlers.json", {
+  list: BRAWLERS.map((b, i) => ({
+    id: b.id, name: b.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()), released: true,
+    imageUrl2: `https://cdn.brawlify.com/brawlers/borderless/${b.id}.png`,
+    class: { id: i, name: CLASSES[i] }, rarity: { id: 1, name: "Rare" },
+    gadgets: describe(acc(b.id, 23000000, "GADGET")), starPowers: describe(acc(b.id, 23100000, "STAR POWER")),
+  })),
+});
+const MODE_INFO = { gemGrab: [48000000, "Gem Grab"], heist: [48000002, "Heist"], bounty: [48000003, "Bounty"], brawlBall: [48000005, "Brawl Ball"], hotZone: [48000017, "Hot Zone"], knockout: [48000020, "Knockout"], soloShowdown: [48000006, "Solo Showdown"] };
+write("brawlapi/gamemodes.json", { list: Object.entries(MODE_INFO).map(([key, [id, name]]) => ({ id, scId: id, name, scHash: key, color: "#888888", imageUrl: `https://cdn.brawlify.com/game-modes/regular/${id}.png` })) });
+write("brawlapi/maps.json", {
+  list: [...MAPS, { id: 15000040, mode: "soloShowdown", map: "Skull Creek" }].map((m) => ({
+    id: m.id, name: m.map, disabled: false, imageUrl: `https://cdn.brawlify.com/maps/regular/${m.id}.png`,
+    gameMode: { id: MODE_INFO[m.mode][0], name: MODE_INFO[m.mode][1] },
   })),
 });
 console.log("Fixtures written to", out);

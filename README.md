@@ -3,7 +3,7 @@
 Live drafting coach for Brawl Stars ranked. A collector gathers ranked match stats on a schedule;
 a static page suggests your best pick as you tap in the draft.
 
-Status: **Milestone 2** (collector and hourly GitHub workflow).
+Status: **Milestone 3** (static data, roster and the JSON outputs).
 
 ## Setup
 
@@ -53,6 +53,14 @@ Crawls battle logs and writes state to `data/` (gitignored). Each run seeds from
 once a day, visits the highest-priority players, and adds new ranked draft games to that day's
 totals. Set `DATA_DIR` to write somewhere else, or `COLLECTOR_CONFIG` to use a different config.
 
+### 6. Build the UI's data files (optional)
+
+```bash
+npm run outputs
+```
+
+Writes `data/out/stats.json`, `static.json` and `roster.json` (see [Outputs](#outputs)).
+
 ## Collector on GitHub Actions
 
 `.github/workflows/collect.yml` runs the collector hourly (and on demand from the Actions tab).
@@ -63,7 +71,11 @@ totals. Set `DATA_DIR` to write somewhere else, or `COLLECTOR_CONFIG` to use a d
    ```
 2. Push. The first run creates the `data` branch; each run replaces it with a single commit,
    so the repo doesn't grow.
-3. Optional: set a repository variable `BS_API_BASE` to use a different proxy.
+3. Set your player tag as a repository variable (it's public in-game, so not a secret):
+   ```bash
+   gh variable set MY_TAG --body "#YOURTAG" --repo aldencressy/brawl-draft-coach
+   ```
+4. Optional: set a repository variable `BS_API_BASE` to use a different proxy.
 
 Each run's summary is in the Actions log and in `meta.json` on the `data` branch.
 A run fails (red) if it fetched many logs but found no ranked games, which usually means the API
@@ -92,6 +104,36 @@ Battle logs only cover the last ~2 hours for active players, so players who had 
 on their last visit are revisited sooner. Over `poolCap`, the least productive players are
 dropped.
 
+## Outputs
+
+Each run writes these to `out/` on the `data` branch:
+
+- **`stats.json`**: ranked games over the window.
+  - `maps[mapId]`: games on the map, and `brawlers[id] = [games, wins]`.
+  - `modes[mode]` and `overall` (all modes combined): `brawlers`, plus `vs["a-b"] = [games, wins for a]`
+    (a is the lower id) and `with["a-b"] = [games, wins together]`.
+  - `currentMaps`: maps played in the last 2 days, most played first.
+  - `window`, `games`, `minRank`, `generatedAt`.
+- **`static.json`**: every brawler with display name, class, image, roles, gadgets and star powers
+  (with descriptions), hypercharges, gears and its `build`; plus ranked maps and modes.
+- **`roster.json`**: your brawlers (power and owned items) with your ranked games and wins on each,
+  your current rank and Elo, and your 50 most recent ranked games.
+
+Sources:
+
+- **Official API `/brawlers`** decides which brawlers and items exist, so new brawlers show up
+  immediately.
+- **BrawlAPI** adds names, classes, images, descriptions and maps. Refreshed weekly
+  (`cache/brawlapi.json`); if it's down, the cached copy is used.
+- **`config/roles.json`** (edit me): each brawler gets the roles for its class, plus any you list for
+  it by name.
+- **`config/builds.json`** (edit me): recommended builds by item name. Battle logs don't record
+  builds, so these are hand-written.
+- **Your battle log**: fetched every run; your ranked games accumulate in `me.json` with no time
+  limit.
+
+`npm run outputs` warns about names in `roles.json` or `builds.json` that don't match anything.
+
 ## Without a key: mock server
 
 ```bash
@@ -103,6 +145,8 @@ Then, in another terminal:
 ```bash
 BS_API_BASE=http://localhost:8787/v1 BS_API_KEY=mock MY_TAG=9LQ0P npm run verify-key
 ```
+
+For `npm run outputs`, also set `BRAWLAPI_BASE=http://localhost:8787/brawlapi/v1`.
 
 `MOCK_FLAKY=1 npm run mock` makes every third request fail, to exercise retries.
 Fixture data in `fixtures/` is synthetic (`npm run fixtures` regenerates it); see `fixtures/README.md`.
@@ -138,4 +182,4 @@ npm test          # unit tests
 npm run typecheck
 ```
 
-Static data, your roster, the JSON outputs and Pages setup come in later milestones.
+The scoring engine and the draft UI (with Pages setup) come in later milestones.

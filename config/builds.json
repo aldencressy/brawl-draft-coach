@@ -1,0 +1,14 @@
+{
+  "_help": "Recommended builds, shown with each suggestion. Battle logs don't record builds, so these are hand-written. Use the item names as they appear in the game (case doesn't matter); 'npm run outputs' warns about names that don't match a brawler or item. Any field can be left out.",
+
+  "_example": {
+    "Shelly": {
+      "gadget": "Clay Pigeons",
+      "starPower": "Shell Shock",
+      "gears": ["Damage", "Shield"],
+      "note": "Bush control maps"
+    }
+  },
+
+  "brawlers": {}
+}

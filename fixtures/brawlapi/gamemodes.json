@@ -1,0 +1,60 @@
+{
+  "list": [
+    {
+      "id": 48000000,
+      "scId": 48000000,
+      "name": "Gem Grab",
+      "scHash": "gemGrab",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000000.png"
+    },
+    {
+      "id": 48000002,
+      "scId": 48000002,
+      "name": "Heist",
+      "scHash": "heist",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000002.png"
+    },
+    {
+      "id": 48000003,
+      "scId": 48000003,
+      "name": "Bounty",
+      "scHash": "bounty",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000003.png"
+    },
+    {
+      "id": 48000005,
+      "scId": 48000005,
+      "name": "Brawl Ball",
+      "scHash": "brawlBall",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000005.png"
+    },
+    {
+      "id": 48000017,
+      "scId": 48000017,
+      "name": "Hot Zone",
+      "scHash": "hotZone",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000017.png"
+    },
+    {
+      "id": 48000020,
+      "scId": 48000020,
+      "name": "Knockout",
+      "scHash": "knockout",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000020.png"
+    },
+    {
+      "id": 48000006,
+      "scId": 48000006,
+      "name": "Solo Showdown",
+      "scHash": "soloShowdown",
+      "color": "#888888",
+      "imageUrl": "https://cdn.brawlify.com/game-modes/regular/48000006.png"
+    }
+  ]
+}

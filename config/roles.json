@@ -1,0 +1,24 @@
+{
+  "_help": "Roles drive the role-fit part of the score. Every brawler gets the roles listed for its BrawlAPI class under fromClass, plus any listed for it under brawlers. Brawler names are matched ignoring case, spaces and punctuation. Add or rename roles freely; 'npm run outputs' warns about names it can't match.",
+
+  "fromClass": {
+    "Tank": ["tank"],
+    "Assassin": ["assassin"],
+    "Support": ["support"],
+    "Artillery": ["thrower"],
+    "Marksman": ["marksman"],
+    "Controller": ["controller"],
+    "Damage Dealer": ["damage"]
+  },
+
+  "brawlers": {
+    "Shelly": ["anti-tank", "wall-breaker"],
+    "Colette": ["anti-tank"],
+    "Colt": ["wall-breaker"],
+    "Bull": ["wall-breaker"],
+    "Brock": ["wall-breaker"],
+    "El Primo": ["wall-breaker"],
+    "Dynamike": ["wall-breaker"],
+    "Frank": ["wall-breaker"]
+  }
+}

@@ -18,6 +18,8 @@ function fixturePath(path: string): string | undefined {
   if ((m = path.match(/^\/v1\/players\/([^/]+)$/))) return `players/${tag(m[1]!)}.json`;
   if ((m = path.match(/^\/v1\/rankings\/([^/]+)\/players$/))) return `rankings/${decodeURIComponent(m[1]!)}.json`;
   if (path === "/v1/brawlers") return "brawlers.json";
+  // BrawlAPI lives under /brawlapi/v1 on the mock (BRAWLAPI_BASE=http://localhost:8787/brawlapi/v1).
+  if ((m = path.match(/^\/brawlapi\/v1\/(brawlers|maps|gamemodes)$/))) return `brawlapi/${m[1]}.json`;
   return undefined;
 }
 
@@ -30,10 +32,11 @@ const server = createServer((req, res) => {
   };
 
   const auth = req.headers.authorization ?? "";
-  if (!auth.startsWith("Bearer ") || auth === "Bearer ") {
+  const needsKey = !url.pathname.startsWith("/brawlapi/"); // BrawlAPI is keyless
+  if (needsKey && (!auth.startsWith("Bearer ") || auth === "Bearer ")) {
     return send(403, { reason: "accessDenied", message: "Invalid authorization" });
   }
-  if (auth === "Bearer bad-ip") {
+  if (needsKey && auth === "Bearer bad-ip") {
     return send(403, { reason: "accessDenied.invalidIp", message: "Invalid authorization: API key does not allow access from IP 1.2.3.4" });
   }
   if (flaky && ++requestCount % 3 === 0) {

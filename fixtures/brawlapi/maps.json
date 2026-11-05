@@ -1,0 +1,74 @@
+{
+  "list": [
+    {
+      "id": 15000010,
+      "name": "Gem Fort",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000010.png",
+      "gameMode": {
+        "id": 48000000,
+        "name": "Gem Grab"
+      }
+    },
+    {
+      "id": 15000011,
+      "name": "Hideout",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000011.png",
+      "gameMode": {
+        "id": 48000003,
+        "name": "Bounty"
+      }
+    },
+    {
+      "id": 15000018,
+      "name": "Belle's Rock",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000018.png",
+      "gameMode": {
+        "id": 48000020,
+        "name": "Knockout"
+      }
+    },
+    {
+      "id": 15000005,
+      "name": "Triple Dribble",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000005.png",
+      "gameMode": {
+        "id": 48000005,
+        "name": "Brawl Ball"
+      }
+    },
+    {
+      "id": 15000020,
+      "name": "Ring of Fire",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000020.png",
+      "gameMode": {
+        "id": 48000017,
+        "name": "Hot Zone"
+      }
+    },
+    {
+      "id": 15000030,
+      "name": "Kaboom Canyon",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000030.png",
+      "gameMode": {
+        "id": 48000002,
+        "name": "Heist"
+      }
+    },
+    {
+      "id": 15000040,
+      "name": "Skull Creek",
+      "disabled": false,
+      "imageUrl": "https://cdn.brawlify.com/maps/regular/15000040.png",
+      "gameMode": {
+        "id": 48000006,
+        "name": "Solo Showdown"
+      }
+    }
+  ]
+}

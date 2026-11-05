@@ -1,0 +1,536 @@
+{
+  "list": [
+    {
+      "id": 16000000,
+      "name": "Shelly",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000000.png",
+      "class": {
+        "id": 0,
+        "name": "Damage Dealer"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000001,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000002,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100001,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100002,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000001,
+      "name": "Colt",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000001.png",
+      "class": {
+        "id": 1,
+        "name": "Damage Dealer"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000011,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000012,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100011,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100012,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000002,
+      "name": "Bull",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000002.png",
+      "class": {
+        "id": 2,
+        "name": "Tank"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000021,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000022,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100021,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100022,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000003,
+      "name": "Brock",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000003.png",
+      "class": {
+        "id": 3,
+        "name": "Marksman"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000031,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000032,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100031,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100032,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000004,
+      "name": "Rico",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000004.png",
+      "class": {
+        "id": 4,
+        "name": "Damage Dealer"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000041,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000042,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100041,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100042,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000005,
+      "name": "Spike",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000005.png",
+      "class": {
+        "id": 5,
+        "name": "Damage Dealer"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000051,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000052,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100051,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100052,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000006,
+      "name": "Barley",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000006.png",
+      "class": {
+        "id": 6,
+        "name": "Artillery"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000061,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000062,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100061,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100062,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000007,
+      "name": "Jessie",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000007.png",
+      "class": {
+        "id": 7,
+        "name": "Controller"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000071,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000072,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100071,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100072,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000008,
+      "name": "Nita",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000008.png",
+      "class": {
+        "id": 8,
+        "name": "Damage Dealer"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000081,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000082,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100081,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100082,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000009,
+      "name": "Dynamike",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000009.png",
+      "class": {
+        "id": 9,
+        "name": "Artillery"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000091,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000092,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100091,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100092,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000010,
+      "name": "El Primo",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000010.png",
+      "class": {
+        "id": 10,
+        "name": "Tank"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000101,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000102,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100101,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100102,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000011,
+      "name": "Mortis",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000011.png",
+      "class": {
+        "id": 11,
+        "name": "Assassin"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000111,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000112,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100111,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100112,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000012,
+      "name": "Crow",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000012.png",
+      "class": {
+        "id": 12,
+        "name": "Assassin"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000121,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000122,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100121,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100122,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    },
+    {
+      "id": 16000013,
+      "name": "Poco",
+      "released": true,
+      "imageUrl2": "https://cdn.brawlify.com/brawlers/borderless/16000013.png",
+      "class": {
+        "id": 13,
+        "name": "Support"
+      },
+      "rarity": {
+        "id": 1,
+        "name": "Rare"
+      },
+      "gadgets": [
+        {
+          "id": 23000131,
+          "name": "Gadget 1",
+          "description": "What GADGET 1 does."
+        },
+        {
+          "id": 23000132,
+          "name": "Gadget 2",
+          "description": "What GADGET 2 does."
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100131,
+          "name": "Star Power 1",
+          "description": "What STAR POWER 1 does."
+        },
+        {
+          "id": 23100132,
+          "name": "Star Power 2",
+          "description": "What STAR POWER 2 does."
+        }
+      ]
+    }
+  ]
+}

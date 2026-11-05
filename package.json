@@ -11,6 +11,7 @@
     "verify-key": "tsx scripts/verify-key.ts",
     "inspect": "tsx scripts/inspect.ts",
     "collect": "tsx scripts/collect.ts",
+    "outputs": "tsx scripts/outputs.ts",
     "mock": "tsx mock/server.ts",
     "fixtures": "node fixtures/generate.mjs",
     "test": "vitest run",

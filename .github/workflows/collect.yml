@@ -50,6 +50,15 @@ jobs:
           BS_API_BASE: ${{ vars.BS_API_BASE || 'https://bsproxy.royaleapi.dev/v1' }}
           DATA_DIR: data
 
+      - name: Build outputs
+        if: ${{ !cancelled() && steps.load.outcome == 'success' }}
+        run: npm run outputs
+        env:
+          BS_API_KEY: ${{ secrets.BS_API_KEY }}
+          BS_API_BASE: ${{ vars.BS_API_BASE || 'https://bsproxy.royaleapi.dev/v1' }}
+          MY_TAG: ${{ vars.MY_TAG }}
+          DATA_DIR: data
+
       # A single orphan commit, force-pushed, so the data branch never accumulates history.
       # Runs even if collect failed, so pool progress isn't lost (a failed run still shows red),
       # but never if loading failed, which would overwrite good data with an empty folder.

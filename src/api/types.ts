@@ -10,6 +10,7 @@ export interface Paged<T> {
 export interface Accessory {
   id: number;
   name: string;
+  level?: number;
 }
 
 export interface PlayerBrawler {
@@ -22,6 +23,7 @@ export interface PlayerBrawler {
   gadgets?: Accessory[];
   starPowers?: Accessory[];
   gears?: Accessory[];
+  hyperCharges?: Accessory[];
 }
 
 export interface Player {
@@ -29,6 +31,13 @@ export interface Player {
   name: string;
   trophies?: number;
   highestTrophies?: number;
+  rankedRank?: number;
+  rankedRankName?: string;
+  rankedElo?: number;
+  highestSeasonRankedRank?: number;
+  highestSeasonRankedRankName?: string;
+  highestAllTimeRankedRank?: number;
+  highestAllTimeRankedRankName?: string;
   brawlers: PlayerBrawler[];
 }
 
@@ -74,4 +83,6 @@ export interface BrawlerInfo {
   name: string;
   gadgets?: Accessory[];
   starPowers?: Accessory[];
+  gears?: Accessory[];
+  hyperCharges?: Accessory[];
 }

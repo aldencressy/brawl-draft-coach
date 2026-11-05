@@ -3,6 +3,11 @@
   "name": "Me",
   "trophies": 41234,
   "highestTrophies": 42000,
+  "rankedRank": 15,
+  "rankedRankName": "MYTHIC III",
+  "rankedElo": 6120,
+  "highestSeasonRankedRankName": "LEGENDARY I",
+  "highestAllTimeRankedRankName": "LEGENDARY I",
   "brawlers": [
     {
       "id": 16000000,
@@ -23,10 +28,22 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [
+        {
+          "id": 23200000,
+          "name": "SHELLY HYPER"
+        }
+      ],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -49,10 +66,22 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [
+        {
+          "id": 23200001,
+          "name": "COLT HYPER"
+        }
+      ],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -75,10 +104,22 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [
+        {
+          "id": 23200002,
+          "name": "BULL HYPER"
+        }
+      ],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -101,10 +142,22 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [
+        {
+          "id": 23200003,
+          "name": "BROCK HYPER"
+        }
+      ],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -127,10 +180,22 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [
+        {
+          "id": 23200004,
+          "name": "RICO HYPER"
+        }
+      ],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -153,10 +218,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -179,10 +251,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -205,10 +284,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -231,10 +317,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -257,10 +350,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     },
@@ -283,10 +383,17 @@
           "name": "STAR POWER 1"
         }
       ],
+      "hyperCharges": [],
       "gears": [
         {
           "id": 62000000,
-          "name": "DAMAGE"
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
         }
       ]
     }

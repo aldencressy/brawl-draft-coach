@@ -22,6 +22,29 @@
           "id": 23100002,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200000,
+          "name": "SHELLY HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -45,6 +68,29 @@
         {
           "id": 23100012,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200001,
+          "name": "COLT HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -70,6 +116,29 @@
           "id": 23100022,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200002,
+          "name": "BULL HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -93,6 +162,29 @@
         {
           "id": 23100032,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200003,
+          "name": "BROCK HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -118,6 +210,29 @@
           "id": 23100042,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200004,
+          "name": "RICO HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -141,6 +256,29 @@
         {
           "id": 23100052,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200005,
+          "name": "SPIKE HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -166,6 +304,29 @@
           "id": 23100062,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200006,
+          "name": "BARLEY HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -189,6 +350,29 @@
         {
           "id": 23100072,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200007,
+          "name": "JESSIE HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -214,6 +398,29 @@
           "id": 23100082,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200008,
+          "name": "NITA HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -237,6 +444,29 @@
         {
           "id": 23100092,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200009,
+          "name": "DYNAMIKE HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -262,6 +492,29 @@
           "id": 23100102,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200010,
+          "name": "EL PRIMO HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -285,6 +538,29 @@
         {
           "id": 23100112,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200011,
+          "name": "MORTIS HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     },
@@ -310,6 +586,29 @@
           "id": 23100122,
           "name": "STAR POWER 2"
         }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200012,
+          "name": "CROW HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
       ]
     },
     {
@@ -333,6 +632,76 @@
         {
           "id": 23100132,
           "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200013,
+          "name": "POCO HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
+        }
+      ]
+    },
+    {
+      "id": 16000099,
+      "name": "NEWBIE",
+      "gadgets": [
+        {
+          "id": 23000991,
+          "name": "GADGET 1"
+        },
+        {
+          "id": 23000992,
+          "name": "GADGET 2"
+        }
+      ],
+      "starPowers": [
+        {
+          "id": 23100991,
+          "name": "STAR POWER 1"
+        },
+        {
+          "id": 23100992,
+          "name": "STAR POWER 2"
+        }
+      ],
+      "hyperCharges": [
+        {
+          "id": 23200099,
+          "name": "NEWBIE HYPER"
+        }
+      ],
+      "gears": [
+        {
+          "id": 62000000,
+          "name": "SPEED",
+          "level": 3
+        },
+        {
+          "id": 62000002,
+          "name": "DAMAGE",
+          "level": 3
+        },
+        {
+          "id": 62000004,
+          "name": "SHIELD",
+          "level": 3
         }
       ]
     }
