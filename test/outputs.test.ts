@@ -6,7 +6,7 @@ import type { RankedGame } from "../src/collector/games.js";
 import type { BrawlApiData } from "../src/outputs/brawlapi.js";
 import { buildRoster, emptyMe, updateMe } from "../src/outputs/me.js";
 import { buildStatic, nameKey, type RolesConfig } from "../src/outputs/static.js";
-import { buildStats } from "../src/outputs/stats.js";
+import { buildStats, dayWeight } from "../src/outputs/stats.js";
 import { fixtureLog } from "./helpers.js";
 
 const read = (p: string) => JSON.parse(readFileSync(p, "utf8"));
@@ -105,6 +105,53 @@ describe("buildStats", () => {
     expect(stats.currentMaps).toEqual([100, 200]);
     const later = buildStats([d1], 13, now);
     expect(later.currentMaps).toEqual([]);
+  });
+});
+
+describe("buildStats weighting", () => {
+  const game = (day: string, winner: 0 | 1): RankedGame => ({
+    key: day + winner, day, time: 0, mode: "gemGrab", mapId: 100, map: "M", teams: [[1, 2, 3], [4, 5, 6]], winner, playerTags: [], avgRank: 15,
+  });
+  // Brawler 1 lost 100 games two days ago and won 100 today.
+  const old = emptyDay("2026-11-03");
+  const fresh = emptyDay("2026-11-05");
+  for (let i = 0; i < 100; i++) {
+    addGame(old, game("2026-11-03", 1));
+    addGame(fresh, game("2026-11-05", 0));
+  }
+
+  it("counts newer days more", () => {
+    const stats = buildStats([old, fresh], 13, now, { recencyDecay: 0.5, balanceChange: { date: null, weightBefore: 0 } });
+    // 100 wins at weight 1, 100 losses at weight 0.25
+    expect(stats.maps[100]!.brawlers[1]).toEqual([125, 100]);
+    expect(stats.maps[100]!.games).toBe(125);
+    expect(stats.games).toBe(200);
+    expect(stats.effectiveGames).toBe(125);
+  });
+
+  it("drops days before a balance change", () => {
+    const stats = buildStats([old, fresh], 13, now, { recencyDecay: 1, balanceChange: { date: "2026-11-04", weightBefore: 0 } });
+    expect(stats.overall.brawlers[1]).toEqual([100, 100]);
+    expect(stats.window).toEqual({ from: "2026-11-05", to: "2026-11-05", days: 1 });
+    expect(stats.games).toBe(100);
+  });
+
+  it("can keep part of the days before a balance change", () => {
+    const stats = buildStats([old, fresh], 13, now, { recencyDecay: 1, balanceChange: { date: "2026-11-04", weightBefore: 0.3 } });
+    expect(stats.overall.brawlers[1]).toEqual([130, 100]);
+  });
+
+  it("without weighting, matches the raw totals", () => {
+    const stats = buildStats([old, fresh], 13, now);
+    expect(stats.overall.brawlers[1]).toEqual([200, 100]);
+    expect(stats.effectiveGames).toBe(stats.games);
+  });
+
+  it("day weight: the change day itself counts fully", () => {
+    const w = { recencyDecay: 0.85, balanceChange: { date: "2026-11-04", weightBefore: 0 } };
+    expect(dayWeight("2026-11-05", "2026-11-05", w)).toBe(1);
+    expect(dayWeight("2026-11-04", "2026-11-05", w)).toBeCloseTo(0.85);
+    expect(dayWeight("2026-11-03", "2026-11-05", w)).toBe(0);
   });
 });
 

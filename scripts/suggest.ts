@@ -5,12 +5,16 @@
 //   --slot   your overall pick slot, 1-6 (default 1)
 //   --ally / --enemy / --ban   comma-separated brawler names
 //   --json   print the full Recommendation (what the AI layer will receive)
+//   --all    top picks on every current ranked map at --slot (a quick sanity check after tuning)
+//   --calibration   with --map: average counter/pair edge against the map's most-picked brawlers.
+//                   Each should be near 0; a consistent offset means the model is biased.
 // Reads DATA_DIR/out/ (default data/out). To use the live data:
 //   git clone -q --depth 1 --branch data https://github.com/aldencressy/brawl-draft-coach.git data
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import draftConfig from "../config/draft.json";
 import weightsJson from "../config/weights.json";
+import { StatsModel } from "../src/engine/model.js";
 import { recommend } from "../src/engine/recommend.js";
 import type { DraftConfig, EngineData, Weights } from "../src/engine/types.js";
 import { nameKey } from "../src/outputs/static.js";
@@ -33,6 +37,41 @@ const data: EngineData = {
 };
 
 const mapArg = arg("map");
+const weights = weightsJson as unknown as Weights;
+const order = draftConfig as unknown as DraftConfig;
+
+if (process.argv.includes("--all")) {
+  const slot = Number(arg("slot") ?? 1);
+  for (const id of data.stats.currentMaps) {
+    const rec = recommend({ mapId: id, mySlot: slot, bans: [], allies: [], enemies: [] }, data, weights, order);
+    const top = rec.candidates.slice(0, rec.showTop).map((c) => `${c.name} ${c.score > 0 ? "+" : ""}${c.score}${c.lowData ? "*" : ""}`);
+    console.log(`${rec.context.mapName.padEnd(18)} ${top.join(" · ")}`);
+  }
+  console.log(`\n* = fewer than ${weights.lowDataGames} games on that map`);
+  process.exit(0);
+}
+
+if (process.argv.includes("--calibration") && mapArg) {
+  const map = data.static.maps.find((m) => nameKey(m.name).includes(nameKey(mapArg)));
+  if (!map) throw new Error(`No map matching "${mapArg}"`);
+  const model = new StatsModel(data.stats, map.mode, map.id, weights);
+  const meta = recommend({ mapId: map.id, mySlot: 1, bans: [], allies: [], enemies: [] }, data, weights, order).data.mapMeta.slice(0, 8);
+  const avg = (target: number, kind: "vs" | "with") => {
+    let sum = 0;
+    let games = 0;
+    for (const b of data.static.brawlers) {
+      if (b.id === target) continue;
+      const e = kind === "vs" ? model.vs(b.id, target) : model.with(b.id, target);
+      sum += e.value * e.games;
+      games += e.games;
+    }
+    return games ? (100 * sum) / games : 0;
+  };
+  console.log(`${map.name}: average edge of every brawler (weighted by games), in points\n`);
+  for (const m of meta) console.log(`  ${m.name.padEnd(14)} against: ${avg(m.id, "vs").toFixed(2).padStart(6)}   with: ${avg(m.id, "with").toFixed(2).padStart(6)}`);
+  process.exit(0);
+}
+
 if (!mapArg) {
   console.log("Current ranked maps:");
   for (const id of data.stats.currentMaps) {
@@ -72,8 +111,8 @@ const rec = recommend(
     enemies: brawlers(arg("enemy")),
   },
   data,
-  weightsJson as unknown as Weights,
-  draftConfig as unknown as DraftConfig,
+  weights,
+  order,
 );
 
 if (process.argv.includes("--json")) {
@@ -84,7 +123,9 @@ if (process.argv.includes("--json")) {
 const c = rec.context;
 console.log(`\n${c.mapName} (${c.mode}) · pick ${c.mySlot} · ${c.enemyPicksAfterMine} enemy pick(s) after yours`);
 console.log(`Allies: ${c.allies.map((a) => a.name).join(", ") || "–"} · Enemies: ${c.enemies.map((e) => e.name).join(", ") || "–"} · Bans: ${c.bans.map((b) => b.name).join(", ") || "–"}`);
-console.log(`${rec.data.mapGames.toLocaleString("en-US")} games on this map, ${rec.data.games.toLocaleString("en-US")} total (${rec.data.window.from} to ${rec.data.window.to})\n`);
+const w = data.stats.weighting;
+const weightingNote = w ? ` · recent days weighted (×${w.recencyDecay}/day)${w.balanceChange.date ? `, balance change ${w.balanceChange.date}` : ""}` : "";
+console.log(`${rec.data.mapGames.toLocaleString("en-US")} weighted games on this map, ${rec.data.games.toLocaleString("en-US")} total (${rec.data.window.from} to ${rec.data.window.to})${weightingNote}\n`);
 
 for (const [i, x] of rec.candidates.slice(0, rec.showTop).entries()) {
   const parts = Object.entries(x.parts)

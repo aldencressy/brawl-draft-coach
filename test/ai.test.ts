@@ -18,6 +18,9 @@ describe("AI prompt", () => {
     expect(payload.candidates[0]).toMatchObject({ id: ids[0], engineRank: 1, score: rec.candidates[0]!.score });
     expect(payload.candidates[0].counters.map((c: { vs: string }) => c.vs)).toEqual(["Prey", "Tank"]);
     expect(payload.candidates[0].gadgets[0]).toMatch(/Gadget/);
+    expect(payload.mapMeta.length).toBeGreaterThan(0);
+    expect(payload.mapMeta[0]).toHaveProperty("pickRate");
+    expect(payload.candidates[0]).toHaveProperty("mapPickRate");
   });
 
   it("keeps the system prompt fixed, so it can be cached", () => {

@@ -126,6 +126,7 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .cand .why span + span::before { content: " · "; color: var(--faint); }
 .cand .extra { color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
 .cand .warn { color: var(--warn); }
+.cand .onmap { color: var(--muted); font-variant-numeric: tabular-nums; }
 .cand.first .name { color: var(--gold); }
 .parts { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .parts .p { color: var(--good); }

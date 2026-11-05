@@ -55,7 +55,10 @@ async function main(): Promise<void> {
 
   // Stats
   const state = loadState(dataDir);
-  const stats = buildStats([...state.days.values()], config.minRank, now);
+  const stats = buildStats([...state.days.values()], config.minRank, now, {
+    recencyDecay: config.recencyDecay ?? 1,
+    balanceChange: config.balanceChange ?? { date: null, weightBefore: 1 },
+  });
 
   // You
   const myTag = myTagFromEnv();
@@ -73,7 +76,8 @@ async function main(): Promise<void> {
     console.warn("MY_TAG is not set; skipping roster.json.");
   }
 
-  console.log(`Writing ${outDir}/ (${stats.games} games, ${stats.window.from} to ${stats.window.to})`);
+  const change = stats.weighting.balanceChange.date ? `, balance change ${stats.weighting.balanceChange.date}` : "";
+  console.log(`Writing ${outDir}/ (${stats.games} games, ${stats.effectiveGames} after weighting${change}, ${stats.window.from} to ${stats.window.to})`);
   writeOut(outDir, "stats.json", stats);
   writeOut(outDir, "static.json", staticData);
   if (roster) writeOut(outDir, "roster.json", roster);

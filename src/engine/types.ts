@@ -5,13 +5,19 @@ import type { StaticData } from "../outputs/static.js";
 import type { StatsData } from "../outputs/stats.js";
 
 export type Team = "first" | "second";
-export type Part = "map" | "counter" | "synergy" | "risk" | "role" | "comfort";
-export type PartWeights = Record<Part, number>;
+/** Parts weighted by pick slot (`byPick`). */
+export type WeightedPart = "map" | "counter" | "synergy" | "risk" | "role" | "comfort";
+/** Every part of a score; `unproven` is the same at every slot (`uncertainty`). */
+export type Part = WeightedPart | "unproven";
+export type PartWeights = Record<WeightedPart, number>;
 
 export interface Weights {
   byPick: Record<string, PartWeights>;
   smoothing: { overall: number; mode: number; map: number; pairOverall: number; pairMode: number; personal: number };
-  risk: { consider: number; minMapWinRate: number };
+  carryover: { mode: number; map: number };
+  gamesPerDraft: number;
+  uncertainty: { z: number };
+  risk: { weights: number[]; z: number; minPickRate: number; minMapWinRate: number };
   roles: {
     fill: number;
     duplicate: number;
@@ -51,7 +57,18 @@ export interface PairDetail {
   name: string;
   /** Advantage over what the two brawlers' own win rates predict, in points. */
   points: number;
+  /** A cautious version of `points`: standard errors closer to 0 (1 for counters and pairs, risk.z for threats). */
+  low: number;
   games: number;
+}
+
+/** One of the most-picked brawlers on the map: what the map rewards at this rank. */
+export interface MetaPick {
+  id: number;
+  name: string;
+  games: number;
+  winRate: number;
+  pickRate: number;
 }
 
 export interface ScoredCandidate {
@@ -97,7 +114,14 @@ export interface Recommendation {
     bans: Array<{ id: number; name: string }>;
     weights: PartWeights;
   };
-  data: { games: number; mapGames: number; window: StatsData["window"]; generatedAt: string };
+  data: {
+    games: number;
+    mapGames: number;
+    window: StatsData["window"];
+    generatedAt: string;
+    /** The map's most-picked brawlers (from the mode when the map has few games). */
+    mapMeta: MetaPick[];
+  };
   /** Best first. The UI shows the first `showTop`; the AI layer gets all of them. */
   candidates: ScoredCandidate[];
   showTop: number;

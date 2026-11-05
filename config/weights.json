@@ -18,12 +18,28 @@
     "map": 200,
     "pairOverall": 150,
     "pairMode": 150,
-    "personal": 25
+    "personal": 50
   },
 
+  "carryover": {
+    "_help": "How much of a brawler's edge elsewhere is assumed to carry over before this map's own games say otherwise. 1 = all of it, 0 = none (start from 50%). A brawler that wins on close-range maps may lose on long-range ones, and rarely picked brawlers' win rates are inflated by specialists, so neither is trusted fully.",
+    "mode": 0.6,
+    "map": 0.4
+  },
+
+  "gamesPerDraft": 2.5,
+
+  "uncertainty": {
+    "_help": "How much to prefer proven picks over promising but unproven ones. The 'unproven' part subtracts this many standard errors of the map win rate, so a brawler with no games on the map loses ~3 points and one with 2,000 games loses ~1. 0 turns it off.",
+    "z": 0.5
+  },
+
+
   "risk": {
-    "_help": "Counter risk = average of the `consider` worst counters still available to the enemy, scaled by enemy picks left after yours (out of 3). Counters with a map win rate under minMapWinRate are ignored as unlikely picks.",
-    "consider": 3,
+    "_help": "Counter risk: the enemy's best remaining counters to this brawler, weighted best first (weights), scaled by enemy picks left after yours (out of 3). Only brawlers the enemy might realistically pick count: picked in at least minPickRate of games on this map, with a map win rate of at least minMapWinRate. Each counter is measured cautiously (z standard errors below its estimate), because the worst of dozens of noisy matchups always looks bad by chance; 2 keeps noise out while real hard counters with hundreds of games still count.",
+    "weights": [0.6, 0.3, 0.1],
+    "z": 2,
+    "minPickRate": 0.02,
     "minMapWinRate": 0.47
   },
 
@@ -41,8 +57,8 @@
     }
   },
 
-  "minPower": 1,
-  "lowDataGames": 40,
+  "minPower": 11,
+  "lowDataGames": 100,
   "reasonMinPoints": 1.0,
   "showTop": 5,
   "handOffTop": 10

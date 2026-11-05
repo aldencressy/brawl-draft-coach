@@ -35,11 +35,12 @@ describe("recommend: sample drafts", () => {
     expect(top(rec).reasons[0]).toMatch(/^Strong on map/);
   });
 
-  it("first pick: the brawlers least exposed to counters are tagged as hard to counter", () => {
+  it("tags 'hard to counter' only when it sets a brawler apart", () => {
     const rec = run({ mySlot: 1 }, { ...weights, handOffTop: 20 });
+    const safe = rec.candidates.filter((c) => (c.details.threats[0]?.low ?? 0) < weights.reasonMinPoints);
     const tagged = rec.candidates.filter((c) => c.reasons.includes("Hard to counter"));
-    expect(tagged.length).toBeGreaterThan(0);
-    expect(tagged.length).toBeLessThanOrEqual(Math.ceil(rec.candidates.length / 4) + 1);
+    if (safe.length > rec.candidates.length / 2) expect(tagged).toEqual([]);
+    else expect(tagged.map((c) => c.id)).toEqual(safe.map((c) => c.id));
     expect(tagged.map((c) => c.id)).not.toContain(B.Fragile);
     // Picked last, there's nothing left to counter you, so nobody gets the tag.
     const last = run({ mySlot: 6, allies: [B.Filler1, B.Tank], enemies: [B.Filler2, B.Unowned, B.Prey] });
@@ -49,7 +50,7 @@ describe("recommend: sample drafts", () => {
   it("first pick: a strong but easily countered brawler is held back, and warned about", () => {
     const early = run({ mySlot: 1 });
     const fragile = early.candidates.find((c) => c.id === B.Fragile)!;
-    expect(fragile.parts.risk).toBeLessThan(-2);
+    expect(fragile.parts.risk).toBeLessThan(-1.5);
     expect(fragile.warning).toBe("Watch for Bully");
     expect(fragile.details.threats[0]!.id).toBe(B.Bully);
     // Picked last there's no risk, so it ranks higher than it did first.
@@ -97,12 +98,22 @@ describe("recommend: sample drafts", () => {
   });
 });
 
+describe("recommend: summary tags", () => {
+  it("names a general edge when no single matchup stands out", () => {
+    const rec = run({ mySlot: 6, allies: [B.Filler1, B.TwinA], enemies: [B.Prey, B.Filler2, B.Tank] }, { ...weights, handOffTop: 20 });
+    for (const c of rec.candidates) {
+      const specific = c.reasons.some((r) => r.startsWith("Counters"));
+      if (c.reasons.includes("Good into their picks")) expect(specific).toBe(false);
+    }
+  });
+});
+
 describe("recommend: thin data", () => {
   it("flags low data and leans on the mode rate when the map has few games", () => {
     const thin = { ...weights, lowDataGames: 100_000 };
     const rec = run({ mySlot: 1 }, thin);
     expect(rec.candidates.every((c) => c.lowData)).toBe(true);
-    expect(top(rec).warning).toMatch(/^Only \d+ games on this map/);
+    expect(top(rec).warning).toMatch(/^Rarely picked here \(\d+ games\)$/);
   });
 
   it("works for a map with no data at all, using the mode", () => {
@@ -127,7 +138,8 @@ describe("recommend: output", () => {
   });
 
   it("returns handOffTop candidates, best first, each with at most three reasons", () => {
-    expect(rec.candidates).toHaveLength(Math.min(weights.handOffTop, 8));
+    // 12 brawlers, minus 3 taken (Unowned is banned and unowned anyway), Unowned, and Filler2 (power 7).
+    expect(rec.candidates).toHaveLength(Math.min(weights.handOffTop, 7));
     expect(rec.showTop).toBe(weights.showTop);
     for (let i = 1; i < rec.candidates.length; i++) expect(rec.candidates[i - 1]!.score).toBeGreaterThanOrEqual(rec.candidates[i]!.score);
     for (const c of rec.candidates) expect(c.reasons.length).toBeLessThanOrEqual(3);

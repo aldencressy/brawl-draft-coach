@@ -20,10 +20,10 @@ export interface AiTake {
 
 export const SYSTEM_PROMPT = `You are a draft coach for Brawl Stars ranked (3v3 draft, Mythic rank and above). The player is mid-draft and must pick soon, so answer briefly.
 
-You receive the state of the draft and a statistics engine's top candidates for the player's pick. For each candidate you get its score in win-rate points and the parts behind it: map strength, counter value against enemy picks, synergy with ally picks, counter risk from enemy picks still to come, role fit, and the player's own record on that brawler. Details include sample sizes, the specific matchups, and gadget and star power descriptions.
+You receive the state of the draft, the map's most-picked brawlers at this rank (what the map rewards), and a statistics engine's top candidates for the player's pick. For each candidate you get its score in win-rate points and the parts behind it: map strength, counter value against enemy picks, synergy with ally picks, counter risk from enemy picks still to come, role fit, the player's own record on that brawler, and an "unproven" cost for having few games on this map. Details include sample sizes, how often it's picked on this map, the specific matchups, and gadget and star power descriptions.
 
 How to judge:
-- The statistics are your main evidence. Trust them in proportion to their sample sizes; a strong number on a few dozen games is weak evidence.
+- The statistics are your main evidence. Trust them in proportion to their sample sizes; a strong number on a few dozen games is weak evidence, and a brawler that is almost never picked on this map at this rank is probably there for a reason.
 - Add what the numbers can't see: team composition (range, wall-breaking, tankiness, healing, control), how the map plays, what the enemy's remaining picks are likely to target, and whether the player's team has an answer to each enemy threat.
 - Your knowledge of the game may be out of date. Where the provided descriptions or stats disagree with what you remember, go with what's provided.
 - Only choose among the candidates given. Never suggest a brawler that isn't in the list.
@@ -70,6 +70,7 @@ export function buildUserMessage(rec: Recommendation, staticData: StaticData, ca
     enemies: c.enemies.map((e) => describe(e.id)),
     bans: c.bans.map((b) => b.name),
     data: { gamesOnMap: rec.data.mapGames, totalGames: rec.data.games, window: rec.data.window },
+    mapMeta: rec.data.mapMeta.map(({ name, games, winRate, pickRate }) => ({ name, games, winRate, pickRate })),
     candidates: rec.candidates.slice(0, candidates).map((x, i) => {
       const b = byId.get(x.id);
       return {
@@ -81,6 +82,7 @@ export function buildUserMessage(rec: Recommendation, staticData: StaticData, ca
         warning: x.warning ?? null,
         mapWinRate: x.details.mapWinRate,
         mapGames: x.details.mapGames,
+        mapPickRate: x.details.mapPickRate,
         counters: x.details.counters.map(({ name, points, games }) => ({ vs: name, points, games })),
         synergies: x.details.synergies.map(({ name, points, games }) => ({ with: name, points, games })),
         threats: x.details.threats.map(({ name, points, games }) => ({ from: name, points, games })),

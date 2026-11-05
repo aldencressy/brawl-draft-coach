@@ -110,7 +110,9 @@ dropped.
 
 Each run writes these to `out/` on the `data` branch:
 
-- **`stats.json`**: ranked games over the window.
+- **`stats.json`**: ranked games over the window, weighted by day (`recencyDecay`,
+  `balanceChange`), so its counts are weighted games; `games` is the raw total and
+  `effectiveGames` the weighted one.
   - `maps[mapId]`: games on the map, and `brawlers[id] = [games, wins]`.
   - `modes[mode]` and `overall` (all modes combined): `brawlers`, plus `vs["a-b"] = [games, wins for a]`
     (a is the lower id) and `with["a-b"] = [games, wins together]`.
@@ -211,32 +213,49 @@ the browser call is in `web/src/ai.ts`.
 
 `recommend(draft, data, weights, draftConfig)` in `src/engine/recommend.ts` is a pure function:
 given the map, your pick slot, bans, ally picks and enemy picks, it scores every brawler you own
-that's still available. Scores are in **win-rate points** (+1 = one percentage point).
+at `minPower` or above (default 11) that's still available. Scores are in **win-rate points**
+(+1 = one percentage point).
 
 | Part | What it measures |
 |---|---|
 | `map` | Smoothed win rate on this map, minus 50% |
 | `counter` | Average edge against each enemy already picked |
 | `synergy` | Average edge with each ally already picked |
-| `risk` | How hard the worst counters still open to the enemy beat it, scaled by enemy picks left after yours |
+| `risk` | How hard the enemy's best remaining counters beat it, scaled by enemy picks left after yours |
 | `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles` in weights) |
 | `comfort` | How much better you do on it than everyone else (from your own ranked games) |
+| `unproven` | A cost for having few games on this map: the less evidence, the bigger it is |
 
-Each part is multiplied by its weight for your pick slot (`byPick` in `config/weights.json`) and
-summed. Early picks lean on map strength and low risk; the last pick leans on counters.
+The first six are multiplied by their weight for your pick slot (`byPick` in `config/weights.json`);
+`unproven` is the same at every slot (`uncertainty.z`). Early picks lean on map strength and low
+risk; the last pick leans on counters.
 
-**Smoothing.** Win rates are smoothed with `(wins + k × prior) / (games + k)`. The prior for a map
-rate is the brawler's rate on the mode's *other* maps; for that, its rate in *other* modes; then 50%.
-Using only outside games means no game counts twice. `k` values are in `smoothing`; they're high
-because one draft is played as 2–3 games.
+**Smoothing.** Win rates are smoothed with `(wins + k × prior) / (games + k)`. A map rate's prior
+is the brawler's rate on the mode's *other* maps; that one's prior is its rate in *other* modes;
+then 50%. Using only outside games means no game counts twice. `k` values are in `smoothing`;
+they're high because one draft is played as 2–3 games (`gamesPerDraft`).
+
+**Carry-over.** Only part of a brawler's edge elsewhere carries over to this map (`carryover`):
+a close-range brawler that wins on Safe Zone can lose on Bridge Too Far, and rarely picked
+brawlers' win rates are inflated by specialists. A brawler's rate on *this* map has to come
+mostly from games on this map.
 
 **Edges, not raw win rates.** A strong brawler beats most enemies, so a matchup only counts as a
-counter if it beats what the two brawlers' own win rates predict. Same for teammate pairs.
+counter if it beats what the two brawlers' own win rates predict. Each mode's games are compared
+with that mode's expectation, and only the effect carries over between modes.
+
+**Noise.** Counter risk takes the worst of dozens of matchups, and the worst of many noisy numbers
+always looks bad by chance, which would punish exactly the brawlers with the most data. So risk
+uses each counter's cautious edge (`risk.z` standard errors below its estimate), and only from
+brawlers the enemy might realistically pick on this map (`risk.minPickRate`, `risk.minMapWinRate`).
+"Counters X" and "Pairs with X" tags also require the edge to hold up after allowing for noise.
 
 **Output** (`Recommendation` in `src/engine/types.ts`) is plain JSON: the draft context, data
-freshness, and the top `handOffTop` candidates, each with its score, the parts, up to three reason
-tags, a warning (thin data or a dangerous counter), the build from `builds.json`, and the details
-behind each part. The UI shows the first `showTop`; the AI layer (Milestone 6) will get all of them.
+freshness, the map's most-picked brawlers (`data.mapMeta`), and the top `handOffTop` candidates,
+each with its score, the parts, up to three reason tags, a warning (rarely picked here, or a
+dangerous counter), the build from `builds.json`, and the details behind each part. The UI shows
+the first `showTop`, each with its win rate, games and pick rate on the map; the AI layer gets all
+of them.
 
 **Draft order** is in `config/draft.json`: which team makes each of the six picks.
 
@@ -249,6 +268,13 @@ npm run suggest -- --map "hard rock" --slot 6 --ally gene,emz --enemy mortis,cro
 ```
 
 Add `--json` to see the full output. To refresh the data later: `rm -rf data` and clone again.
+
+Checks worth running after changing weights:
+
+```bash
+npm run suggest -- --all --slot 1                     # top 5 on every current map; * marks thin data
+npm run suggest -- --calibration --map "bridge too far"  # average edges; should all be near 0
+```
 
 ## Without a key: mock server
 
@@ -290,6 +316,22 @@ Collector settings are in `config/collector.json`:
 | `concurrency` | `6` | Logs fetched in parallel (still within the rate limit) |
 | `windowDays` | `7` | Days of totals kept |
 | `seenKeyDays` | `3` | Days of game IDs kept for dedupe |
+| `recencyDecay` | `0.85` | In `stats.json`, each day counts this much relative to the next one (1 = all equal) |
+| `balanceChange` | `{"date": null, "weightBefore": 0}` | After a balance patch or buffy release, set `date` to the day it went live; days before it count `weightBefore` (0 = dropped) |
+
+### After a balance change
+
+Set the date in `config/collector.json` and push:
+
+```json
+"balanceChange": { "date": "2026-11-12", "weightBefore": 0 }
+```
+
+The next hourly run rebuilds `stats.json` from that day on; the page header then reads
+"… games since the Nov 12 balance change". `weightBefore: 0.3` keeps older days at 30% instead,
+which helps for the first day or two when post-patch data is thin. Set `date` back to `null`
+once the window has moved past it. The raw daily totals on the `data` branch are never changed,
+so either setting can be undone.
 
 ## Development
 

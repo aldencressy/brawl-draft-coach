@@ -15,6 +15,13 @@ export interface CollectorConfig {
   windowDays: number;
   /** How long to remember match keys for dedupe. Must exceed how long a game can stay in someone's log. */
   seenKeyDays: number;
+  /** stats.json weighting: each day counts this much relative to the next one (1 = all equal). */
+  recencyDecay: number;
+  /**
+   * After a balance patch or buffy release, set `date` ("YYYY-MM-DD", the day it went live).
+   * Days before it are multiplied by `weightBefore`: 0 drops them, 0.3 keeps 30%. `null` = none.
+   */
+  balanceChange: { date: string | null; weightBefore: number };
 }
 
 export function loadCollectorConfig(path: string = "config/collector.json"): CollectorConfig {

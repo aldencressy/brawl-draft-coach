@@ -17,6 +17,8 @@ const config: CollectorConfig = {
   concurrency: 3,
   windowDays: 7,
   seenKeyDays: 3,
+  recencyDecay: 1,
+  balanceChange: { date: null, weightBefore: 0 },
 };
 
 const HOUR = 3_600_000;

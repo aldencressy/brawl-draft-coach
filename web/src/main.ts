@@ -223,7 +223,7 @@ function renderSetup(): void {
            <div class="slotpick">${slotsHtml}</div>`
         : ""
     }
-    <div class="foot"><span>${data.stats.games.toLocaleString()} ranked games at ${rankLabel()} · updated ${ago(data.stats.generatedAt)}</span></div>
+    <div class="foot"><span>${dataLabel()} · updated ${ago(data.stats.generatedAt)}</span></div>
   </div>`;
 
   const input = document.getElementById("mapq") as HTMLInputElement;
@@ -240,6 +240,15 @@ function renderSetup(): void {
   });
   app.querySelectorAll<HTMLElement>("[data-map]").forEach((el) => el.addEventListener("click", () => chooseMap(Number(el.dataset.map))));
   app.querySelectorAll<HTMLElement>("[data-slot]").forEach((el) => el.addEventListener("click", () => chooseSlot(Number(el.dataset.slot))));
+}
+
+/** "101,864 games at Mythic+", plus the balance change the stats start from, if one is set. */
+function dataLabel(): string {
+  const base = `${data.stats.games.toLocaleString()} games at ${rankLabel()}`;
+  const change = data.stats.weighting?.balanceChange;
+  if (!change?.date) return base;
+  const when = new Date(`${change.date}T00:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+  return change.weightBefore === 0 ? `${base} since the ${when} balance change` : `${base} · older than ${when} counts ${Math.round(change.weightBefore * 100)}%`;
 }
 
 function rankLabel(): string {
@@ -306,7 +315,7 @@ function renderHeader(): void {
       <div><h1>${esc(map?.name ?? "Unknown map")}</h1>
       <div class="sub">${esc(modeName(map?.mode ?? ""))} · you pick ${ordinal(state.mySlot!)} (${team} team)</div></div>
     </div>
-    <div class="fresh">Updated ${ago(data.stats.generatedAt)} · ${data.stats.games.toLocaleString()} games at ${rankLabel()}</div>
+    <div class="fresh">Updated ${ago(data.stats.generatedAt)} · ${dataLabel()}</div>
     <div class="actions">
       <button id="undo" title="Ctrl+Z">Undo</button>
       <button id="setup">Map / slot</button>
@@ -391,6 +400,12 @@ function matches(): StaticBrawler[] {
   return search(brawlersForMap(state.mapId!), query);
 }
 
+function tileTitle(b: StaticBrawler): string {
+  const [games, wins] = data.stats.maps[state.mapId!]?.brawlers[b.id] ?? [0, 0];
+  const stats = games ? `${Math.round((wins / games) * 100)}% win in ${games.toLocaleString()} games here` : "not played here yet";
+  return `${b.name}: ${stats}${owned && !owned.has(b.id) ? " (not owned)" : ""}`;
+}
+
 function renderGrid(): void {
   const list = matches();
   const available = list.filter((b) => !isTaken(state, b.id));
@@ -399,7 +414,7 @@ function renderGrid(): void {
   document.getElementById("grid")!.innerHTML = list
     .map((b) => {
       const cls = [isTaken(state, b.id) ? "taken" : "", b.id === activeId ? "active" : "", owned && !owned.has(b.id) ? "unowned" : ""].join(" ");
-      return `<div class="tile ${cls}" data-id="${b.id}" title="${esc(b.name)}${owned && !owned.has(b.id) ? " (not owned)" : ""}">${portrait(b.id)}<span class="nm">${esc(b.name)}</span></div>`;
+      return `<div class="tile ${cls}" data-id="${b.id}" title="${esc(tileTitle(b))}">${portrait(b.id)}<span class="nm">${esc(b.name)}</span></div>`;
     })
     .join("");
   document.querySelectorAll<HTMLElement>("#grid .tile:not(.taken)").forEach((el) => el.addEventListener("click", () => enter(Number(el.dataset.id), parseEntry(ui.query).target)));
@@ -432,12 +447,17 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
   const build = x.build
     ? [x.build.gadget, x.build.starPower, ...x.build.gears].filter(Boolean).join(" · ") + (x.build.note ? ` (${x.build.note})` : "")
     : "";
+  const d = x.details;
+  const onMap = d.mapGames
+    ? `${Math.round(d.mapWinRate * 100)}% win here · ${d.mapGames.toLocaleString()} games · picked in ${Math.round(d.mapPickRate * 100)}%`
+    : "Not played on this map yet";
   return `<div class="cand ${i === 0 ? "first" : ""}">
     ${portrait(x.id)}
     <div class="name"><span class="rank">${i + 1}</span>${esc(x.name)}${isMine ? " ✓" : ""}</div>
     <div class="score ${x.score >= 0 ? "pos" : "neg"}">${signed(x.score)}</div>
     <div class="why">${x.reasons.map((r) => `<span>${esc(r)}</span>`).join("") || `<span class="fresh">No standout reason</span>`}</div>
     <div class="extra">
+      <span class="onmap">${onMap}</span>
       ${x.warning ? `<span class="warn">⚠ ${esc(x.warning)}</span>` : ""}
       ${build ? `<span>Build: ${esc(build)}</span>` : ""}
       <span class="parts">${parts}</span>
