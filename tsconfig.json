@@ -8,7 +8,22 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ]
   },
-  "include": ["src", "scripts", "mock", "test"]
+  "include": [
+    "src",
+    "scripts",
+    "mock",
+    "test",
+    "web/src",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
 }

@@ -3,7 +3,9 @@
 Live drafting coach for Brawl Stars ranked. A collector gathers ranked match stats on a schedule;
 a static page suggests your best pick as you tap in the draft.
 
-Status: **Milestone 4** (scoring engine).
+Status: **Milestone 5** (draft UI on GitHub Pages).
+
+**Open the coach:** https://aldencressy.github.io/brawl-draft-coach/
 
 ## Setup
 
@@ -134,6 +136,48 @@ Sources:
 
 `npm run outputs` warns about names in `roles.json` or `builds.json` that don't match anything.
 
+## Draft UI
+
+A static page (`web/`) that loads `stats.json`, `static.json` and `roster.json` once, then runs the
+scoring engine in the browser on every entry. Built for a computer beside your phone; it also
+works at phone width.
+
+**Setup:** type part of the map name and press <kbd>Enter</kbd> (current ranked maps are listed
+first), then press <kbd>1</kbd>–<kbd>6</kbd> for your pick slot.
+
+**Entering the draft:** focus stays in the search box. Type a few letters and press
+<kbd>Enter</kbd>; the brawler goes where the draft expects next:
+
+- **Bans** first. After 6 they close automatically; press <kbd>Enter</kbd> on an empty box to end
+  them early (duplicate bans).
+- **Picks** then follow the draft order from your side, including your own pick.
+- Override where an entry goes with a prefix (`-crow` enemy, `+gene` ally, `!colt` ban), with
+  <kbd>Tab</kbd>, or with the Ban / Ally / Enemy buttons.
+- <kbd>↑</kbd>/<kbd>↓</kbd> choose among matches, <kbd>Esc</kbd> clears, <kbd>Ctrl</kbd>+<kbd>Z</kbd>
+  undoes. Click a placed brawler or ban to remove it. Clicking a portrait also adds it.
+
+The draft is saved in the browser on every entry, so a refresh doesn't lose it.
+
+**Suggestions** for your slot update on every entry: score, reasons, warning, build and the score
+breakdown, plus the next five. After you lock in, your pick is marked with where it ranked.
+
+**Draft log:** each draft with your pick is saved in the browser: map, slot, bans, picks, your
+pick and the suggestions at that moment. "Export draft log" downloads it as JSON, for checking later
+whether following the coach wins.
+
+**Deployment:** every workflow run builds the page with that run's JSON and deploys it to Pages,
+so the site and its data always match. Pushes that change `web/`, `src/engine/` or `config/` also
+trigger a run, so UI and weight changes go live within minutes. One-time setup: in the repo's
+**Settings → Pages**, set **Source** to **GitHub Actions**.
+
+**Local development:**
+
+```bash
+git clone -q --depth 1 --branch data https://github.com/aldencressy/brawl-draft-coach.git data
+npm run dev        # http://localhost:5173, serving data/out/ at /data/
+npm run build:web  # dist/ with the JSON copied in; `npm run preview` serves it
+```
+
 ## Scoring
 
 `recommend(draft, data, weights, draftConfig)` in `src/engine/recommend.ts` is a pure function:
@@ -225,4 +269,4 @@ npm test          # unit tests
 npm run typecheck
 ```
 
-The draft UI (with Pages setup) comes in Milestone 5.
+The AI layer comes in Milestone 6.

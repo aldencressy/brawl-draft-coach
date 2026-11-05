@@ -4,6 +4,10 @@ on:
   schedule:
     - cron: "17 * * * *" # hourly, off the top of the hour when GitHub is busiest
   workflow_dispatch:
+  # UI, engine and config changes go live right away instead of waiting for the next hour.
+  push:
+    branches: [main]
+    paths: ["web/**", "src/engine/**", "config/**", "vite.config.ts"]
 
 permissions:
   contents: write
@@ -17,6 +21,8 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      site: ${{ steps.site.outcome }}
     steps:
       - uses: actions/checkout@v4
 
@@ -51,6 +57,7 @@ jobs:
           DATA_DIR: data
 
       - name: Build outputs
+        id: outputs
         if: ${{ !cancelled() && steps.load.outcome == 'success' }}
         run: npm run outputs
         env:
@@ -73,3 +80,30 @@ jobs:
           git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # The draft UI plus this run's JSON, deployed together so the page and its data always match.
+      - name: Build site
+        id: site
+        if: ${{ !cancelled() && steps.outputs.outcome == 'success' }}
+        run: npm run build:web
+        env:
+          DATA_DIR: data
+
+      - uses: actions/upload-pages-artifact@v3
+        if: ${{ !cancelled() && steps.site.outcome == 'success' }}
+        with:
+          path: dist
+
+  deploy:
+    needs: collect
+    if: ${{ !cancelled() && needs.collect.outputs.site == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
