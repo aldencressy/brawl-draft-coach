@@ -1,0 +1,8 @@
+{
+  "_help": "AI second opinion on the engine's suggestions. Runs in your browser with your own API key (entered on the page). model: any Claude model id, e.g. claude-opus-5-5 (best judgment) or claude-haiku-5-5 (much faster and ~40x cheaper). effort: low | medium | high; higher is slower and more thorough. candidates: how many of the engine's top picks the AI chooses from.",
+  "model": "claude-opus-5-5",
+  "effort": "low",
+  "maxTokens": 8000,
+  "candidates": 10,
+  "debounceMs": 700
+}

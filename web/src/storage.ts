@@ -16,6 +16,8 @@ export interface LoggedDraft {
   myPick: number | null;
   /** Top suggestions (best first) at the moment you entered your pick. */
   suggested: number[] | null;
+  /** The AI's ranking at that moment, if it had answered. */
+  aiSuggested: number[] | null;
 }
 
 function read<T>(key: string): T | null {

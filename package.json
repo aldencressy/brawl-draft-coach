@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=18.18"
   },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0"
+  },
   "scripts": {
     "verify-key": "tsx scripts/verify-key.ts",
     "inspect": "tsx scripts/inspect.ts",

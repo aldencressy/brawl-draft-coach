@@ -18,6 +18,8 @@ export interface DraftState {
   picks: Pick[];
   /** Snapshot of the suggestions when your pick was entered, for the draft log. */
   suggestedAtMyPick: number[] | null;
+  /** The AI's ranking (ids, best first) when your pick was entered, if it had answered. */
+  aiAtMyPick: number[] | null;
   /** When this draft was first written to the draft log; later completions replace that entry. */
   loggedAt: string | null;
 }
@@ -26,7 +28,7 @@ export const MAX_BANS = 6;
 export const PICKS = 6;
 
 export function newDraft(): DraftState {
-  return { mapId: null, mySlot: null, bans: [], bansDone: false, picks: [], suggestedAtMyPick: null, loggedAt: null };
+  return { mapId: null, mySlot: null, bans: [], bansDone: false, picks: [], suggestedAtMyPick: null, aiAtMyPick: null, loggedAt: null };
 }
 
 export function myTeam(order: DraftConfig["order"], mySlot: number): Team {

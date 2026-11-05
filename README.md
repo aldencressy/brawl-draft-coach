@@ -3,7 +3,7 @@
 Live drafting coach for Brawl Stars ranked. A collector gathers ranked match stats on a schedule;
 a static page suggests your best pick as you tap in the draft.
 
-Status: **Milestone 5** (draft UI on GitHub Pages).
+Status: **Milestone 6** (AI second opinion).
 
 **Open the coach:** https://aldencressy.github.io/brawl-draft-coach/
 
@@ -178,6 +178,35 @@ npm run dev        # http://localhost:5173, serving data/out/ at /data/
 npm run build:web  # dist/ with the JSON copied in; `npm run preview` serves it
 ```
 
+## AI second opinion
+
+A card above the suggestions asks Claude to judge the engine's top 10 with what the numbers can't
+see: team composition, how the map plays, what the enemy's remaining picks will target. It answers
+with its best 3–5 (each with a short note and its stats rank), a one-line warning, and a one-line
+summary. It only chooses among the engine's candidates; anything else in its answer is dropped.
+
+- **Key:** paste an Anthropic API key into the card (from console.anthropic.com). It's stored only
+  in that browser's local storage and sent only to `api.anthropic.com`; it never goes into the repo
+  or the site. "Remove key" deletes it.
+- **When it runs:** automatically once picks start, until you've made your pick. Each draft change
+  cancels the previous request and starts a new one after a short pause (`debounceMs`), so the
+  answer always matches the current board. "Ask now" works during bans; untick "Ask automatically"
+  to only ask on demand. After you pick, the answer you picked with stays on screen.
+- **Never blocking:** the engine's suggestions show instantly as before; the AI card fills in a few
+  seconds later. Errors (bad key, rate limit, network) show in the card with a retry button.
+- **Draft log:** the AI's ranking at your pick is logged next to the engine's (`aiSuggested`).
+- **Settings** in `config/ai.json`: `model` (default `claude-opus-5-5`; `claude-haiku-5-5` is much
+  faster and far cheaper), `effort` (`low` by default, for speed), `candidates` (how many of the
+  engine's picks it sees), `maxTokens`, `debounceMs`.
+- **Cost:** about 3,400 input tokens per request. With Opus 5.5 at low effort, roughly 2–5¢ per
+  request, so roughly 5–20¢ per draft depending on how many picks come before yours. Haiku 5.5
+  is around a tenth of a cent per request.
+- **Refusals:** requests opt into server-side fallbacks (`fallbacks: "default"`), so if a safety
+  classifier declines, the API retries on Anthropic's recommended model.
+
+The prompt and the answer validation live in `src/ai/prompt.ts` (pure, tested in `test/ai.test.ts`);
+the browser call is in `web/src/ai.ts`.
+
 ## Scoring
 
 `recommend(draft, data, weights, draftConfig)` in `src/engine/recommend.ts` is a pure function:
@@ -269,4 +298,4 @@ npm test          # unit tests
 npm run typecheck
 ```
 
-The AI layer comes in Milestone 6.
+

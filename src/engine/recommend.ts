@@ -22,7 +22,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
   const nameOf = (id: number) => brawlers.get(id)?.name ?? `#${id}`;
   const named = (ids: number[]) => ids.map((id) => ({ id, name: nameOf(id) }));
 
-  const mapInfo = data.stats.maps[draft.mapId] ?? data.static.maps.find((m) => m.id === draft.mapId);
+  const mapInfo = data.static.maps.find((m) => m.id === draft.mapId) ?? data.stats.maps[draft.mapId];
   const mode = mapInfo?.mode ?? "";
   const model = new StatsModel(data.stats, mode, draft.mapId, weights.smoothing);
 

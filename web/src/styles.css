@@ -151,3 +151,21 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .slotpick .t.second { color: var(--enemy); }
 .foot { color: var(--faint); font-size: 12px; display: flex; gap: 16px; flex-wrap: wrap; }
 .foot a { color: var(--muted); cursor: pointer; text-decoration: underline; }
+
+/* AI second opinion */
+.ai { background: var(--panel); border: 1px solid #4a3d1c; border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ai h2 { margin: 0; font-size: 13px; font-weight: 600; color: var(--gold); text-transform: uppercase; letter-spacing: .06em; display: flex; justify-content: space-between; }
+.ai h2 a { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; cursor: pointer; font-size: 12px; }
+.ai .summary { font-size: 14px; }
+.ai ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.ai li b { font-weight: 600; }
+.ai .note { color: var(--muted); font-size: 13px; }
+.ai .warn { color: var(--warn); font-size: 13px; }
+.ai .err { color: var(--bad); font-size: 13px; }
+.ai .thinking { color: var(--muted); font-size: 13px; animation: pulse 1.4s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .45; } }
+.ai .row { display: flex; gap: 8px; }
+.ai-settings { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.ai-settings label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); }
+.ai-settings label.check { flex-direction: row; align-items: center; gap: 6px; }
+.ai-settings input[type=password] { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }

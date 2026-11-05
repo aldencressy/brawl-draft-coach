@@ -24,6 +24,8 @@ import {
   type DraftState,
   type Target,
 } from "./draftState.js";
+import { draftKey, type AiTake } from "../../src/ai/prompt.js";
+import { aiConfig, askAi, isAbort, loadAiSettings, saveAiSettings } from "./ai.js";
 import { parseEntry, search } from "./search.js";
 import { downloadLog, loadDraft, loadLog, saveDraft, upsertLog } from "./storage.js";
 
@@ -37,6 +39,18 @@ let owned: Set<number> | null;
 let state: DraftState = loadDraft() ?? newDraft();
 let history: DraftState[] = [];
 let ui = { query: "", active: 0, override: null as Target | null, message: "", isError: false, mapQuery: "" };
+
+// AI second opinion: one request per distinct draft state, newest wins.
+let aiSettings = loadAiSettings();
+let ai = {
+  key: null as string | null,
+  status: "idle" as "idle" | "waiting" | "thinking" | "done" | "error",
+  take: null as AiTake | null,
+  error: "",
+  showSettings: false,
+  controller: null as AbortController | null,
+  timer: 0 as number | ReturnType<typeof setTimeout>,
+};
 
 // ---------- helpers ----------
 
@@ -125,7 +139,8 @@ function enter(id: number, target?: Target): void {
   // Snapshot what was suggested when your own pick goes in.
   const mine = myPickId(order, next);
   if (mine !== null && myPickId(order, state) === null && before) {
-    next = { ...next, suggestedAtMyPick: before.candidates.map((c) => c.id) };
+    const aiCurrent = ai.status === "done" && ai.key === draftKey(before) ? ai.take!.ranking.map((r) => r.id) : null;
+    next = { ...next, suggestedAtMyPick: before.candidates.map((c) => c.id), aiAtMyPick: aiCurrent };
   }
   if (isComplete(next)) {
     next = { ...next, loggedAt: next.loggedAt ?? new Date().toISOString() };
@@ -148,6 +163,7 @@ function logDraft(s: DraftState): void {
     enemies: s.picks.filter((p) => p.side === "enemy").map((p) => p.id),
     myPick: myPickId(order, s),
     suggested: s.suggestedAtMyPick,
+    aiSuggested: s.aiAtMyPick ?? null,
   });
 }
 
@@ -164,6 +180,7 @@ function startNewDraft(): void {
   if (!state.loggedAt && myPickId(order, state) !== null) logDraft(state);
   setState(newDraft());
   history = [];
+  resetAi();
   ui = { query: "", active: 0, override: null, message: "", isError: false, mapQuery: "" };
   render();
 }
@@ -259,7 +276,7 @@ function renderDraft(): void {
         <div class="grid" id="grid"></div>
         <div class="foot" id="foot"></div>
       </div>
-      <div class="right"><div class="suggest" id="suggest"></div></div>
+      <div class="right"><div class="ai" id="ai"></div><div class="suggest" id="suggest"></div></div>
     </div>`;
     wireEntry();
   }
@@ -273,7 +290,11 @@ function renderDraft(): void {
   renderGrid();
   renderSuggestions(rec);
   renderFoot();
-  if (document.activeElement !== input) input.focus();
+  maybeAskAi(rec);
+  renderAi();
+  // Keep typing in the entry box, unless you're in another field (like the AI key).
+  const focused = document.activeElement;
+  if (!focused || focused === document.body) input.focus();
 }
 
 function renderHeader(): void {
@@ -473,6 +494,111 @@ function wireEntry(): void {
       undo();
       render();
     }
+  });
+}
+
+// ---------- AI second opinion ----------
+
+function resetAi(): void {
+  ai.controller?.abort();
+  clearTimeout(ai.timer);
+  ai = { ...ai, key: null, status: "idle", take: null, error: "", controller: null };
+}
+
+/** Asks automatically once picks start and until you've picked; each new draft state replaces the last request. */
+function maybeAskAi(rec: Recommendation | null, force = false): void {
+  if (!rec || !aiSettings.enabled || !aiSettings.apiKey) return;
+  const pickedAlready = myPickId(order, state) !== null;
+  if (pickedAlready || isComplete(state)) return; // keep showing the answer you picked with
+  if (!force && bansOpen(state)) return; // bans don't change much; wait for picks
+  const key = draftKey(rec);
+  if (!force && key === ai.key && ai.status !== "error") return;
+
+  ai.controller?.abort();
+  clearTimeout(ai.timer);
+  ai = { ...ai, key, status: "waiting", take: null, error: "", controller: null };
+  // A short pause so a burst of entries makes one request, not several.
+  ai.timer = setTimeout(() => void runAi(rec, key), force ? 0 : aiConfig.debounceMs);
+}
+
+async function runAi(rec: Recommendation, key: string): Promise<void> {
+  const controller = new AbortController();
+  ai = { ...ai, status: "thinking", controller };
+  renderAi();
+  const started = Date.now();
+  try {
+    const take = await askAi(rec, data.static, aiSettings.apiKey, controller.signal);
+    if (ai.key !== key) return; // the draft moved on while we waited
+    ai = { ...ai, status: "done", take, controller: null };
+    console.info(`AI answered in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+  } catch (err) {
+    if (isAbort(err) || ai.key !== key) return;
+    ai = { ...ai, status: "error", error: err instanceof Error ? err.message : String(err), controller: null };
+  }
+  renderAi();
+}
+
+function renderAi(): void {
+  const el = document.getElementById("ai");
+  if (!el) return;
+  const settingsHtml = `
+    <div class="ai-settings">
+      <label>Anthropic API key
+        <input id="ai-key" type="password" placeholder="sk-ant-..." value="${esc(aiSettings.apiKey)}" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="check"><input id="ai-on" type="checkbox" ${aiSettings.enabled ? "checked" : ""}> Ask automatically during drafts</label>
+      <div class="row"><button id="ai-save">Save</button>${aiSettings.apiKey ? `<button id="ai-forget">Remove key</button>` : ""}</div>
+      <div class="fresh">Stored only in this browser and sent only to api.anthropic.com. Model: ${esc(aiConfig.model)}, effort ${esc(aiConfig.effort)}. Each request is charged to your API account.</div>
+    </div>`;
+
+  let body: string;
+  if (!aiSettings.apiKey || ai.showSettings) {
+    body = settingsHtml;
+  } else if (!aiSettings.enabled) {
+    body = `<div class="fresh">Automatic AI is off.</div><div class="row"><button id="ai-now">Ask now</button></div>`;
+  } else if (ai.status === "thinking" || ai.status === "waiting") {
+    body = `<div class="thinking">Thinking it over…</div>`;
+  } else if (ai.status === "error") {
+    body = `<div class="err">${esc(ai.error)}</div><div class="row"><button id="ai-now">Try again</button></div>`;
+  } else if (ai.status === "done" && ai.take) {
+    const t = ai.take;
+    body = `
+      ${t.summary ? `<div class="summary">${esc(t.summary)}</div>` : ""}
+      <ol>${t.ranking
+        .map((r) => `<li><b>${esc(r.name)}</b> <span class="fresh">stats #${r.engineRank}</span><div class="note">${esc(r.note)}</div></li>`)
+        .join("")}</ol>
+      ${t.warning ? `<div class="warn">⚠ ${esc(t.warning)}</div>` : ""}
+      ${myPickId(order, state) === null && !isComplete(state) ? `<div class="row"><button id="ai-now">Ask again</button></div>` : ""}`;
+  } else {
+    body = bansOpen(state)
+      ? `<div class="fresh">Weighs in once picks start.</div><div class="row"><button id="ai-now">Ask now</button></div>`
+      : `<div class="fresh">Waiting for the draft.</div>`;
+  }
+
+  el.innerHTML = `<h2><span>AI second opinion</span>${aiSettings.apiKey ? `<a id="ai-gear">${ai.showSettings ? "Done" : "Settings"}</a>` : ""}</h2>${body}`;
+
+  document.getElementById("ai-gear")?.addEventListener("click", () => {
+    ai.showSettings = !ai.showSettings;
+    renderAi();
+  });
+  document.getElementById("ai-now")?.addEventListener("click", () => {
+    maybeAskAi(suggestions(), true);
+    renderAi();
+  });
+  document.getElementById("ai-save")?.addEventListener("click", () => {
+    const key = (document.getElementById("ai-key") as HTMLInputElement).value.trim();
+    const enabled = (document.getElementById("ai-on") as HTMLInputElement).checked;
+    aiSettings = { apiKey: key, enabled };
+    saveAiSettings(aiSettings);
+    ai.showSettings = false;
+    resetAi();
+    render();
+  });
+  document.getElementById("ai-forget")?.addEventListener("click", () => {
+    aiSettings = { apiKey: "", enabled: aiSettings.enabled };
+    saveAiSettings(aiSettings);
+    resetAi();
+    renderAi();
   });
 }
 
