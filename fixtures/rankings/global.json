@@ -1,55 +1,46 @@
 {
   "items": [
     {
-      "tag": "#2PQ00",
-      "name": "Ava",
+      "tag": "#2PQ0V",
+      "name": "Player1",
       "trophies": 90000,
       "rank": 1
     },
     {
-      "tag": "#2PQ0Y",
-      "name": "Ben",
+      "tag": "#2PQ2V",
+      "name": "Player2",
       "trophies": 89000,
       "rank": 2
     },
     {
-      "tag": "#2PQ02",
-      "name": "Cy",
+      "tag": "#2PQ8V",
+      "name": "Player3",
       "trophies": 88000,
       "rank": 3
     },
     {
-      "tag": "#2PQ03",
-      "name": "Dee",
+      "tag": "#2PQ9V",
+      "name": "Player4",
       "trophies": 87000,
       "rank": 4
     },
     {
-      "tag": "#2PQ04",
-      "name": "Eli",
+      "tag": "#2PQPV",
+      "name": "Player5",
       "trophies": 86000,
       "rank": 5
     },
     {
-      "tag": "#2PQ05",
-      "name": "Fay",
+      "tag": "#2PQYV",
+      "name": "Player6",
       "trophies": 85000,
       "rank": 6
     },
     {
-      "tag": "#2PQ06",
-      "name": "Gus",
+      "tag": "#2YYYYYYY",
+      "name": "Player0",
       "trophies": 84000,
       "rank": 7
-    },
-    {
-      "tag": "#2PQ07",
-      "name": "Hal",
-      "trophies": 83000,
-      "rank": 8
     }
-  ],
-  "paging": {
-    "cursors": {}
-  }
+  ]
 }

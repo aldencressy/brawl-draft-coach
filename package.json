@@ -10,7 +10,9 @@
   "scripts": {
     "verify-key": "tsx scripts/verify-key.ts",
     "inspect": "tsx scripts/inspect.ts",
+    "collect": "tsx scripts/collect.ts",
     "mock": "tsx mock/server.ts",
+    "fixtures": "node fixtures/generate.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

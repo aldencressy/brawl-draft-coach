@@ -1,0 +1,66 @@
+name: Collect
+
+on:
+  schedule:
+    - cron: "17 * * * *" # hourly, off the top of the hour when GitHub is busiest
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Never let two runs touch the data branch at once.
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Load previous state from the data branch
+        id: load
+        run: |
+          # ls-remote exits 2 only when the branch doesn't exist; any other failure must stop the run,
+          # or we'd start fresh and overwrite the real data.
+          status=0; git ls-remote --exit-code --heads origin data >/dev/null || status=$?
+          if [ "$status" = 0 ]; then
+            git clone --depth 1 --branch data "https://github.com/${GITHUB_REPOSITORY}.git" data
+            rm -rf data/.git
+          elif [ "$status" = 2 ]; then
+            echo "No data branch yet; starting fresh."
+            mkdir -p data
+          else
+            exit "$status"
+          fi
+
+      - name: Collect
+        run: npm run collect
+        env:
+          BS_API_KEY: ${{ secrets.BS_API_KEY }}
+          BS_API_BASE: ${{ vars.BS_API_BASE || 'https://bsproxy.royaleapi.dev/v1' }}
+          DATA_DIR: data
+
+      # A single orphan commit, force-pushed, so the data branch never accumulates history.
+      # Runs even if collect failed, so pool progress isn't lost (a failed run still shows red),
+      # but never if loading failed, which would overwrite good data with an empty folder.
+      - name: Save state to the data branch
+        if: ${{ !cancelled() && steps.load.outcome == 'success' }}
+        run: |
+          cd data
+          git init -q -b data
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Data as of $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

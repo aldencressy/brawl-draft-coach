@@ -5,21 +5,21 @@
       "name": "SHELLY",
       "gadgets": [
         {
-          "id": 23000000,
+          "id": 23000001,
           "name": "GADGET 1"
         },
         {
-          "id": 23000001,
+          "id": 23000002,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001000,
+          "id": 23100001,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001001,
+          "id": 23100002,
           "name": "STAR POWER 2"
         }
       ]
@@ -29,21 +29,21 @@
       "name": "COLT",
       "gadgets": [
         {
-          "id": 23000010,
+          "id": 23000011,
           "name": "GADGET 1"
         },
         {
-          "id": 23000011,
+          "id": 23000012,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001010,
+          "id": 23100011,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001011,
+          "id": 23100012,
           "name": "STAR POWER 2"
         }
       ]
@@ -53,21 +53,21 @@
       "name": "BULL",
       "gadgets": [
         {
-          "id": 23000020,
+          "id": 23000021,
           "name": "GADGET 1"
         },
         {
-          "id": 23000021,
+          "id": 23000022,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001020,
+          "id": 23100021,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001021,
+          "id": 23100022,
           "name": "STAR POWER 2"
         }
       ]
@@ -77,21 +77,21 @@
       "name": "BROCK",
       "gadgets": [
         {
-          "id": 23000030,
+          "id": 23000031,
           "name": "GADGET 1"
         },
         {
-          "id": 23000031,
+          "id": 23000032,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001030,
+          "id": 23100031,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001031,
+          "id": 23100032,
           "name": "STAR POWER 2"
         }
       ]
@@ -101,21 +101,21 @@
       "name": "RICO",
       "gadgets": [
         {
-          "id": 23000040,
+          "id": 23000041,
           "name": "GADGET 1"
         },
         {
-          "id": 23000041,
+          "id": 23000042,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001040,
+          "id": 23100041,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001041,
+          "id": 23100042,
           "name": "STAR POWER 2"
         }
       ]
@@ -125,21 +125,21 @@
       "name": "SPIKE",
       "gadgets": [
         {
-          "id": 23000050,
+          "id": 23000051,
           "name": "GADGET 1"
         },
         {
-          "id": 23000051,
+          "id": 23000052,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001050,
+          "id": 23100051,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001051,
+          "id": 23100052,
           "name": "STAR POWER 2"
         }
       ]
@@ -149,21 +149,21 @@
       "name": "BARLEY",
       "gadgets": [
         {
-          "id": 23000060,
+          "id": 23000061,
           "name": "GADGET 1"
         },
         {
-          "id": 23000061,
+          "id": 23000062,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001060,
+          "id": 23100061,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001061,
+          "id": 23100062,
           "name": "STAR POWER 2"
         }
       ]
@@ -173,21 +173,21 @@
       "name": "JESSIE",
       "gadgets": [
         {
-          "id": 23000070,
+          "id": 23000071,
           "name": "GADGET 1"
         },
         {
-          "id": 23000071,
+          "id": 23000072,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001070,
+          "id": 23100071,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001071,
+          "id": 23100072,
           "name": "STAR POWER 2"
         }
       ]
@@ -197,21 +197,21 @@
       "name": "NITA",
       "gadgets": [
         {
-          "id": 23000080,
+          "id": 23000081,
           "name": "GADGET 1"
         },
         {
-          "id": 23000081,
+          "id": 23000082,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001080,
+          "id": 23100081,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001081,
+          "id": 23100082,
           "name": "STAR POWER 2"
         }
       ]
@@ -221,21 +221,21 @@
       "name": "DYNAMIKE",
       "gadgets": [
         {
-          "id": 23000090,
+          "id": 23000091,
           "name": "GADGET 1"
         },
         {
-          "id": 23000091,
+          "id": 23000092,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001090,
+          "id": 23100091,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001091,
+          "id": 23100092,
           "name": "STAR POWER 2"
         }
       ]
@@ -245,21 +245,21 @@
       "name": "EL PRIMO",
       "gadgets": [
         {
-          "id": 23000100,
+          "id": 23000101,
           "name": "GADGET 1"
         },
         {
-          "id": 23000101,
+          "id": 23000102,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001100,
+          "id": 23100101,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001101,
+          "id": 23100102,
           "name": "STAR POWER 2"
         }
       ]
@@ -269,21 +269,21 @@
       "name": "MORTIS",
       "gadgets": [
         {
-          "id": 23000110,
+          "id": 23000111,
           "name": "GADGET 1"
         },
         {
-          "id": 23000111,
+          "id": 23000112,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001110,
+          "id": 23100111,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001111,
+          "id": 23100112,
           "name": "STAR POWER 2"
         }
       ]
@@ -293,21 +293,21 @@
       "name": "CROW",
       "gadgets": [
         {
-          "id": 23000120,
+          "id": 23000121,
           "name": "GADGET 1"
         },
         {
-          "id": 23000121,
+          "id": 23000122,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001120,
+          "id": 23100121,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001121,
+          "id": 23100122,
           "name": "STAR POWER 2"
         }
       ]
@@ -317,27 +317,24 @@
       "name": "POCO",
       "gadgets": [
         {
-          "id": 23000130,
+          "id": 23000131,
           "name": "GADGET 1"
         },
         {
-          "id": 23000131,
+          "id": 23000132,
           "name": "GADGET 2"
         }
       ],
       "starPowers": [
         {
-          "id": 23001130,
+          "id": 23100131,
           "name": "STAR POWER 1"
         },
         {
-          "id": 23001131,
+          "id": 23100132,
           "name": "STAR POWER 2"
         }
       ]
     }
-  ],
-  "paging": {
-    "cursors": {}
-  }
+  ]
 }

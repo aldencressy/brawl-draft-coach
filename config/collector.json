@@ -1,0 +1,12 @@
+{
+  "rankedBattleType": "soloRanked",
+  "minRank": 13,
+  "seedCountries": ["global", "US"],
+  "seedEveryHours": 24,
+  "poolCap": 20000,
+  "maxLogsPerRun": 3000,
+  "maxRunMinutes": 8,
+  "concurrency": 6,
+  "windowDays": 7,
+  "seenKeyDays": 3
+}
