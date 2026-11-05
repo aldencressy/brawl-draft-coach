@@ -1,5 +1,5 @@
 // Draft state and the rules for where the next entry goes. Pure functions, no DOM.
-import type { DraftConfig, Team } from "../../src/engine/types.js";
+import type { DraftConfig, Recommendation, Team } from "../../src/engine/types.js";
 
 export type Side = "ally" | "enemy";
 export type Target = "ban" | Side;
@@ -17,6 +17,8 @@ export interface DraftState {
   picks: Pick[];
   /** Snapshot of the suggestions when your pick was entered, for the draft log. */
   suggestedAtMyPick: number[] | null;
+  /** The full suggestions at the moment you picked; shown, unchanged, for the rest of the draft. */
+  frozen: { pick: number; rec: Recommendation } | null;
   /** The AI's ranking (ids, best first) when your pick was entered, if it had answered. */
   aiAtMyPick: number[] | null;
   /** When this draft was first written to the draft log; later completions replace that entry. */
@@ -27,7 +29,7 @@ export const MAX_BANS = 6;
 export const PICKS = 6;
 
 export function newDraft(): DraftState {
-  return { mapId: null, mySlot: null, bans: [], picks: [], suggestedAtMyPick: null, aiAtMyPick: null, loggedAt: null };
+  return { mapId: null, mySlot: null, bans: [], picks: [], suggestedAtMyPick: null, frozen: null, aiAtMyPick: null, loggedAt: null };
 }
 
 export function myTeam(order: DraftConfig["order"], mySlot: number): Team {

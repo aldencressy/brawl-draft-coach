@@ -114,10 +114,14 @@ function brawlersForMap(mapId: number): StaticBrawler[] {
 
 // ---------- engine ----------
 
-/** Suggestions for your slot. Once you've picked, your pick is left out so you can see where it ranked. */
+/**
+ * Suggestions for your slot. Once you've picked they're frozen as they were at that moment:
+ * later picks can't change your choice, and the weights for your slot only make sense then.
+ */
 function suggestions(): Recommendation | null {
   if (!state.mapId || !state.mySlot) return null;
   const mine = myPickId(order, state);
+  if (mine !== null && state.frozen?.pick === mine) return state.frozen.rec;
   const allies = state.picks.filter((p) => p.side === "ally" && p.id !== mine).map((p) => p.id);
   const enemies = state.picks.filter((p) => p.side === "enemy").map((p) => p.id);
   return recommend({ mapId: state.mapId, mySlot: state.mySlot, bans: state.bans, allies, enemies }, data, weights, { order });
@@ -137,7 +141,7 @@ function enter(id: number, target?: Target): void {
   const mine = myPickId(order, next);
   if (mine !== null && myPickId(order, state) === null && before) {
     const aiCurrent = ai.status === "done" && ai.key === draftKey(before) ? ai.take!.ranking.map((r) => r.id) : null;
-    next = { ...next, suggestedAtMyPick: before.candidates.map((c) => c.id), aiAtMyPick: aiCurrent };
+    next = { ...next, suggestedAtMyPick: before.candidates.map((c) => c.id), frozen: { pick: mine, rec: before }, aiAtMyPick: aiCurrent };
   }
   if (isComplete(next)) {
     next = { ...next, loggedAt: next.loggedAt ?? new Date().toISOString() };
@@ -429,7 +433,7 @@ function renderSuggestions(rec: Recommendation | null): void {
   el.innerHTML = `
     <h2><span>Your pick</span><span>${c.enemyPicksAfterMine ? `${c.enemyPicksAfterMine} enemy pick${c.enemyPicksAfterMine > 1 ? "s" : ""} after you` : "last word"}</span></h2>
     <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}</div>
-    ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.</div>` : ""}
+    ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
     ${shown.map((x, i) => candidateHtml(x, i, x.id === mine)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
     ${!rec.candidates.length ? `<div class="done">Nothing left to suggest from your roster.</div>` : ""}`;

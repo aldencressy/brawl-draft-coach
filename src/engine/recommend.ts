@@ -10,6 +10,7 @@ import type {
   MetaPick,
   Part,
   PairDetail,
+  PartWeights,
   Recommendation,
   ScoredCandidate,
   Weights,
@@ -142,7 +143,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     enemyLeft > 0 && w.risk > 0 ? scored.filter((c) => (c.details.threats[0]?.low ?? 0) < weights.reasonMinPoints).map((c) => c.id) : [],
   );
   const tagSafe = safe.size <= scored.length / 2;
-  for (const c of scored) c.reasons = reasonsFor(c, weights, tagSafe && safe.has(c.id));
+  for (const c of scored) c.reasons = reasonsFor(c, weights, w, tagSafe && safe.has(c.id));
 
   scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
@@ -185,7 +186,7 @@ function mapMeta(model: StatsModel, data: EngineData, count: number): MetaPick[]
 }
 
 /** Short tags for the strongest positive parts, best first, at most three. */
-function reasonsFor(c: ScoredCandidate, weights: Weights, hardToCounter: boolean): string[] {
+function reasonsFor(c: ScoredCandidate, weights: Weights, w: PartWeights, hardToCounter: boolean): string[] {
   const min = weights.reasonMinPoints;
   const tags: Array<{ text: string; points: number }> = [];
   const pct = Math.round(c.details.mapWinRate * 100);
@@ -193,8 +194,9 @@ function reasonsFor(c: ScoredCandidate, weights: Weights, hardToCounter: boolean
   // Only claim map strength from this map's own games, not from what carried over.
   if (c.parts.map >= min && !c.lowData) tags.push({ text: `Strong on map (${pct}%)`, points: c.parts.map });
   // Only name matchups that hold up after allowing for noise.
-  for (const x of c.details.counters) if (x.points >= min && x.low > 0) tags.push({ text: `Counters ${x.name}`, points: x.points });
-  for (const x of c.details.synergies) if (x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: x.points });
+  // Only name matchups and pairs that the score at this pick slot actually counts.
+  if (w.counter > 0) for (const x of c.details.counters) if (x.points >= min && x.low > 0) tags.push({ text: `Counters ${x.name}`, points: x.points });
+  if (w.synergy > 0) for (const x of c.details.synergies) if (x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: x.points });
   // Small edges against (or with) everyone can add up even when no single one stands out.
   const named = (prefix: string) => tags.some((t) => t.text.startsWith(prefix));
   if (c.parts.counter >= min && !named("Counters")) tags.push({ text: "Good into their picks", points: c.parts.counter });

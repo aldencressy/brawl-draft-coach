@@ -171,7 +171,9 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.
 - Items you don't own are struck through, with a note if the recommended build needs one.
 
-After you lock in, your pick is marked with where it ranked.
+After you lock in, the suggestions freeze as they were at that moment, with your pick marked
+and where it ranked. Later picks don't change them: your choice is made, and the weights for
+your slot only make sense at the moment you pick.
 
 **Draft log:** each draft with your pick is saved in the browser: map, slot, bans, picks, your
 pick and the suggestions at that moment. "Export draft log" downloads it as JSON, for checking later

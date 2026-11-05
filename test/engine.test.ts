@@ -108,6 +108,18 @@ describe("recommend: summary tags", () => {
   });
 });
 
+describe("recommend: tags match the score", () => {
+  it("never claims counters or pairs at a slot whose score ignores them", () => {
+    // Pick 1 weights counters and synergy at 0, so even with a full board these can't be reasons.
+    const rec = run({ mySlot: 1, allies: [B.TwinA, B.Tank], enemies: [B.Prey, B.Bully, B.Filler2] }, { ...weights, handOffTop: 20 });
+    for (const c of rec.candidates) {
+      expect(c.reasons.some((r) => r.startsWith("Counters") || r.startsWith("Pairs with"))).toBe(false);
+      expect(c.parts.counter).toBe(0);
+      expect(c.parts.synergy).toBe(0);
+    }
+  });
+});
+
 describe("recommend: thin data", () => {
   it("flags low data and leans on the mode rate when the map has few games", () => {
     const thin = { ...weights, lowDataGames: 100_000 };
