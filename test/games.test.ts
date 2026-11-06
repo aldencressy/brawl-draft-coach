@@ -39,6 +39,17 @@ describe("toRankedGame", () => {
     expect(game.avgRank).toBeCloseTo(ranks.reduce((a, b) => a + b) / 6);
   });
 
+  it("keeps the API's order of players, each player's rank, and where the log owner sits", () => {
+    for (const { owner, entry } of entries) {
+      const game = toRankedGame(entry, owner, "soloRanked");
+      if (!game) continue;
+      const players = entry.battle.teams!.flat();
+      expect([...game.teams[0], ...game.teams[1]]).toEqual(players.map((p) => p.brawler.id));
+      expect(game.ranks).toEqual(players.map((p) => p.brawler.trophies));
+      expect(players[game.owner]!.tag).toBe(owner);
+    }
+  });
+
   it("skips draws and games where the owner isn't present", () => {
     const { owner, entry } = entries.find((e) => e.entry.battle.type === "soloRanked")!;
     expect(toRankedGame({ ...entry, battle: { ...entry.battle, result: "draw" } }, owner, "soloRanked")).toBeNull();

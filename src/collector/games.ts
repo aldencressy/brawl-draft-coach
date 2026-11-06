@@ -10,11 +10,15 @@ export interface RankedGame {
   mode: string;
   mapId: number;
   map: string;
-  /** Brawler ids; teams[winner] won. */
+  /** Brawler ids, in the order the API lists them (which may be the pick order: unconfirmed); teams[winner] won. */
   teams: [number[], number[]];
   winner: 0 | 1;
   playerTags: string[];
   avgRank: number;
+  /** Each player's rank, in the same order as `teams` (team 0 then team 1). */
+  ranks: number[];
+  /** Where the log owner sits in that order (0-5). Tells us whether the order depends on whose log it is. */
+  owner: number;
 }
 
 export function parseBattleTime(s: string): number {
@@ -40,6 +44,7 @@ export function toRankedGame(entry: BattleLogEntry, ownerTag: string, rankedType
 
   const ownerTeam = teams.findIndex((t) => t.some((p) => p.tag === ownerTag));
   if (ownerTeam < 0) return null;
+  const ownerIndex = teams[ownerTeam]!.findIndex((p) => p.tag === ownerTag);
   const winner = (battle.result === "victory" ? ownerTeam : 1 - ownerTeam) as 0 | 1;
 
   const everyone = teams.flat();
@@ -57,6 +62,8 @@ export function toRankedGame(entry: BattleLogEntry, ownerTag: string, rankedType
     winner,
     playerTags,
     avgRank: ranks.reduce((a, b) => a + b, 0) / ranks.length,
+    ranks,
+    owner: ownerTeam * 3 + ownerIndex,
   };
 }
 

@@ -22,7 +22,7 @@ const config: CollectorConfig = {
 };
 
 const HOUR = 3_600_000;
-const freshState = (): CollectorState => ({ pool: emptyPool(), seen: {}, days: new Map(), runs: [] });
+const freshState = (): CollectorState => ({ pool: emptyPool(), seen: {}, days: new Map(), samples: new Map(), runs: [] });
 
 // Games every fixture log could contribute, deduped, at Mythic+.
 const expected = new Set<string>();
@@ -62,10 +62,37 @@ describe("collect", () => {
   it("drops days outside the window and old dedupe keys", async () => {
     const state = freshState();
     state.days.set("2026-10-01", { date: "2026-10-01", games: 5, maps: {}, modes: {} });
+    state.samples.set("2026-10-01", { date: "2026-10-01", seen: 5, fields: [], games: [] });
     state.seen["2026-10-01"] = ["old"];
     await collect(fixtureSource(), state, config, () => Date.UTC(2026, 10, 5, 13), () => {});
     expect(state.days.has("2026-10-01")).toBe(false);
+    expect(state.samples.has("2026-10-01")).toBe(false);
     expect(state.seen["2026-10-01"]).toBeUndefined();
+  });
+
+  it("samples each day's new games, up to the cap", async () => {
+    const run = async (cap: number) => {
+      const state = freshState();
+      let now = Date.UTC(2026, 10, 5, 13);
+      const source = fixtureSource();
+      for (let i = 0; i < 2; i++, now += 2 * HOUR) await collect(source, state, { ...config, sampleGamesPerDay: cap }, () => now, () => {});
+      return state;
+    };
+    const all = await run(1_000_000);
+    expect(all.samples.size).toBe(all.days.size);
+    for (const [date, day] of all.days) {
+      expect(all.samples.get(date)!.seen).toBe(day.games);
+      expect(all.samples.get(date)!.games).toHaveLength(day.games);
+    }
+    const capped = await run(2);
+    for (const [date, day] of capped.days) {
+      expect(capped.samples.get(date)!.seen).toBe(day.games);
+      expect(capped.samples.get(date)!.games.length).toBe(Math.min(2, day.games));
+    }
+    // Off by default.
+    const off = freshState();
+    await collect(fixtureSource(), off, config, () => Date.UTC(2026, 10, 5, 13), () => {});
+    expect(off.samples.size).toBe(0);
   });
 
   it("stops at the time budget", async () => {

@@ -13,7 +13,7 @@ import { apiConfigFromEnv, myTagFromEnv } from "../src/config.js";
 import { DEFAULT_BRAWLAPI_BASE, fetchBrawlApi, isStale, type BrawlApiData } from "../src/outputs/brawlapi.js";
 import { buildRoster, emptyMe, updateMe, type MeState } from "../src/outputs/me.js";
 import { buildStatic, type BuildsConfig, type RolesConfig } from "../src/outputs/static.js";
-import { buildStats } from "../src/outputs/stats.js";
+import { buildStats, resolveBrawlerChanges } from "../src/outputs/stats.js";
 
 const BRAWLAPI_MAX_AGE_DAYS = 7;
 
@@ -58,6 +58,7 @@ async function main(): Promise<void> {
   const stats = buildStats([...state.days.values()], config.minRank, now, {
     recencyDecay: config.recencyDecay ?? 1,
     balanceChange: config.balanceChange ?? { date: null, weightBefore: 1 },
+    brawlerChanges: resolveBrawlerChanges(config.brawlerChanges, staticData.brawlers, (m) => console.warn(`  ! ${m}`)),
   });
 
   // You
@@ -76,7 +77,11 @@ async function main(): Promise<void> {
     console.warn("MY_TAG is not set; skipping roster.json.");
   }
 
-  const change = stats.weighting.balanceChange.date ? `, balance change ${stats.weighting.balanceChange.date}` : "";
+  const changes = [
+    ...(stats.weighting.balanceChange.date ? [`balance change ${stats.weighting.balanceChange.date}`] : []),
+    ...(stats.weighting.brawlerChanges ?? []).map((c) => `${c.name} changed ${c.date}`),
+  ];
+  const change = changes.length ? `, ${changes.join(", ")}` : "";
   console.log(`Writing ${outDir}/ (${stats.games} games, ${stats.effectiveGames} after weighting${change}, ${stats.window.from} to ${stats.window.to})`);
   writeOut(outDir, "stats.json", stats);
   writeOut(outDir, "static.json", staticData);

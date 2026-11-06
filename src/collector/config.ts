@@ -15,6 +15,11 @@ export interface CollectorConfig {
   windowDays: number;
   /** How long to remember match keys for dedupe. Must exceed how long a game can stay in someone's log. */
   seenKeyDays: number;
+  /**
+   * Games per day kept whole in games/<date>.json, a uniform random sample of the day (0 or missing =
+   * none). Used to check whether the API lists teams in pick order and to backtest the engine.
+   */
+  sampleGamesPerDay?: number;
   /** stats.json weighting: each day counts this much relative to the next one (1 = all equal). */
   recencyDecay: number;
   /**
@@ -22,6 +27,12 @@ export interface CollectorConfig {
    * Days before it are multiplied by `weightBefore`: 0 drops them, 0.3 keeps 30%. `null` = none.
    */
   balanceChange: { date: string | null; weightBefore: number };
+  /**
+   * Changes to single brawlers (a buff, a nerf, new Buffies): that brawler's games before `date`
+   * ("YYYY-MM-DD", the day it went live) count `weightBefore` as much (default 0 = dropped), along
+   * with its matchups and pairs. Everyone else's games are untouched. Names as in the game.
+   */
+  brawlerChanges?: Array<{ brawler: string; date: string; weightBefore?: number }>;
 }
 
 export function loadCollectorConfig(path: string = "config/collector.json"): CollectorConfig {

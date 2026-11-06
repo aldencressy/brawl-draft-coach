@@ -16,7 +16,7 @@ export interface Weights {
   carryover: { mode: number; map: number };
   gamesPerDraft: number;
   uncertainty: { z: number };
-  simulation: { minPickRate: number; teammateWeight: number };
+  simulation: { minPickRate: number; teammateWeight: number; answerFocus: number };
   roleWeight: number;
   comfortWeight: number;
   roles: {
@@ -92,8 +92,17 @@ export interface ScoredCandidate {
     usedModeFallback: boolean;
     counters: PairDetail[];
     synergies: PairDetail[];
-    /** The enemy's likely answers to this pick (from playing out the draft), worst for you first. */
-    threats: PairDetail[];
+    /**
+     * The enemy's likeliest picks after this one (as many as they have left), worst for you first,
+     * each with its chance of being picked (0-1).
+     */
+    threats: Array<PairDetail & { chance: number }>;
+    /**
+     * How it does against the meta: its average matchup against the brawlers picked on this map,
+     * weighted by how often each is picked, in points per enemy. (`later` uses the enemy's likely
+     * picks, which start from the same pick rates.)
+     */
+    intoMeta: number;
     /** Your teammates' likely picks after this one. */
     likelyTeammates: Array<{ id: number; name: string }>;
     rolesFilled: string[];

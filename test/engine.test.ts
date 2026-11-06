@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { enemyPicksAfter, slotsOf, teamOfSlot } from "../src/engine/draft.js";
-import { recommend } from "../src/engine/recommend.js";
+import { StatsModel } from "../src/engine/model.js";
+import { playOut, recommend } from "../src/engine/recommend.js";
 import type { Draft, Weights } from "../src/engine/types.js";
 import { B, BOUNTY_MAP, GEM_FORT, buildWorld, draftConfig, weights } from "./engineWorld.js";
 
@@ -35,16 +36,18 @@ describe("recommend: sample drafts", () => {
     expect(top(rec).reasons[0]).toMatch(/^Strong on map/);
   });
 
-  it("tags 'hard to counter' only when it sets a brawler apart", () => {
-    const rec = run({ mySlot: 1 }, { ...weights, handOffTop: 20 });
-    const safe = rec.candidates.filter((c) => (c.details.threats[0]?.low ?? 0) < weights.reasonMinPoints);
-    const tagged = rec.candidates.filter((c) => c.reasons.includes("Hard to counter"));
-    if (safe.length > rec.candidates.length / 2) expect(tagged).toEqual([]);
-    else expect(tagged.map((c) => c.id)).toEqual(safe.map((c) => c.id));
-    expect(tagged.map((c) => c.id)).not.toContain(B.Fragile);
-    // Picked last, there's nothing left to counter you, so nobody gets the tag.
-    const last = run({ mySlot: 6, allies: [B.Filler1, B.Tank], enemies: [B.Filler2, B.Unowned, B.Prey] });
-    expect(last.candidates.some((c) => c.reasons.includes("Hard to counter"))).toBe(false);
+  it("tags 'hard to answer' (or 'good into the meta') only when the rest of the draft goes well for it", () => {
+    const tag = (c: ReturnType<typeof top>) => c.reasons.find((r) => r === "Hard to answer" || r === "Good into the meta");
+    // Lots of reasons per brawler, so a tag earned isn't crowded out of the top three.
+    const rec = run({ mySlot: 1 }, { ...weights, handOffTop: 20, reasonMinPoints: 0.5 });
+    for (const c of rec.candidates) {
+      if (tag(c)) expect(c.parts.later).toBeGreaterThanOrEqual(0.5);
+      if (c.parts.later < 0.5) expect(tag(c)).toBeUndefined();
+    }
+    expect(tag(rec.candidates.find((c) => c.id === B.Fragile)!)).toBeUndefined();
+    // Picked last, there's nothing left to answer you, so nobody gets the tag.
+    const last = run({ mySlot: 6, allies: [B.Filler1, B.Tank], enemies: [B.Filler2, B.Unowned, B.Prey] }, { ...weights, handOffTop: 20 });
+    expect(last.candidates.some((c) => tag(c))).toBe(false);
   });
 
   it("first pick: a strong but easily countered brawler is held back, and warned about", () => {
@@ -128,6 +131,43 @@ describe("recommend: one measure at every slot", () => {
       expect(c.details.likelyTeammates).toHaveLength(2);
       expect(c.details.threats.map((t) => t.id)).not.toContain(c.id);
     }
+  });
+});
+
+describe("recommend: the meta", () => {
+  const withFocus = (answerFocus: number): Weights => ({ ...weights, handOffTop: 20, simulation: { ...weights.simulation, answerFocus } });
+  const find = (rec: ReturnType<typeof run>, id: number) => rec.candidates.find((c) => c.id === id)!;
+
+  it("enemy picks still to come start from what's popular here and lean toward what suits the board", () => {
+    const model = new StatsModel(world.stats, "gemGrab", GEM_FORT, weights);
+    const pool = [B.Bully, B.Prey, B.Tank, B.Filler1, B.Filler2, B.Unowned];
+    const prior = (b: number) => model.pickRate(b);
+    const odds = (focus: number) => new Map(playOut(model, [B.Fragile], [], ["enemy"], pool, { prior, focus }).enemyOdds[0]);
+    const blind = odds(0);
+    expect([...blind.values()].reduce((a, b) => a + b, 0)).toBeCloseTo(1);
+    // Without regard to the board, odds follow pick rates.
+    const total = pool.reduce((t, b) => t + prior(b), 0);
+    for (const b of pool) expect(blind.get(b)).toBeCloseTo(prior(b) / total);
+    // The more enemies counter-pick, the likelier Bully, which beats Fragile.
+    expect(odds(30).get(B.Bully)!).toBeGreaterThan(blind.get(B.Bully)!);
+    expect(odds(300).get(B.Bully)!).toBeGreaterThan(odds(30).get(B.Bully)!);
+    // Only enemy picks get odds.
+    expect(playOut(model, [B.Fragile], [], ["ally", "enemy"], pool, { prior, focus: 30 }).enemyOdds).toHaveLength(1);
+  });
+
+  it("the likelier enemies are to counter-pick, the more an easily answered first pick costs", () => {
+    const later = (focus: number) => find(run({ mySlot: 1 }, withFocus(focus)), B.Fragile).parts.later;
+    expect(later(300)).toBeLessThan(later(0));
+  });
+
+  it("early picks gain for beating what's popular on the map", () => {
+    const popular = buildWorld();
+    const prey = popular.stats.maps[GEM_FORT]!.brawlers[B.Prey]!;
+    popular.stats.maps[GEM_FORT]!.brawlers[B.Prey] = [prey[0] * 3, prey[1] * 3];
+    const before = find(run({ mySlot: 1 }, withFocus(30)), B.Hunter);
+    const after = find(recommend(draft({ mySlot: 1 }), popular, withFocus(30), draftConfig), B.Hunter);
+    expect(after.details.intoMeta).toBeGreaterThan(before.details.intoMeta);
+    expect(after.parts.later).toBeGreaterThan(before.parts.later);
   });
 });
 

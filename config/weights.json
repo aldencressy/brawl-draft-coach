@@ -1,9 +1,10 @@
 {
   "_help": "Scoring settings. Every pick is judged by how your team does once the draft is complete: your pick's own effect (map strength, counters against enemies already picked, pairs with allies already picked) plus how the rest of the draft goes after it, played out pick by pick with each side taking its best option. All in win-rate points (+1 = one percentage point). See README > Scoring.",
   "simulation": {
-    "_help": "Playing out the rest of the draft after your pick, so earlier picks account for what comes next. Each remaining pick goes to the side that owns it, which takes the brawler worth most to it: strength on the map plus how it pairs with its team and matches up against the other. Other players pick from brawlers actually played on this map (picked in at least minPickRate of its games). Your pick's pairs with your likely teammates count teammateWeight as much, since solo-queue teammates don't always pick what fits you.",
+    "_help": "Playing out the rest of the draft after your pick, so earlier picks account for what comes next. Each remaining pick goes to the side that owns it, which takes the brawler worth most to it: strength on the map plus how it pairs with its team and matches up against the other. Other players pick from brawlers actually played on this map (picked in at least minPickRate of its games). Your pick's pairs with your likely teammates count teammateWeight as much, since solo-queue teammates don't always pick what fits you. Enemies don't always pick the best answer either: each enemy pick still to come is a spread over what they might take, starting from how often each brawler is picked on this map (the meta) and tilted toward picks that suit the board. A pick worth x more on this board (in win-rate fractions, 0.1 = 10 points) is e^(answerFocus * x) times as likely: at 100, a 3-point counter is 20 times as likely as usual and a 1-point edge 2.7 times. 100 keeps counter risk about where it was before the meta weighting; lower values (enemies mostly pick what's popular) make first and last picks MORE alike. A placeholder until it can be fitted from real picks.",
     "minPickRate": 0.02,
-    "teammateWeight": 0.5
+    "teammateWeight": 0.5,
+    "answerFocus": 100
   },
   "roleWeight": 0.6,
   "comfortWeight": 0.5,

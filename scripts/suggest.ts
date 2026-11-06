@@ -124,7 +124,8 @@ const c = rec.context;
 console.log(`\n${c.mapName} (${c.mode}) · pick ${c.mySlot} · ${c.enemyPicksAfterMine} enemy pick(s) after yours`);
 console.log(`Allies: ${c.allies.map((a) => a.name).join(", ") || "–"} · Enemies: ${c.enemies.map((e) => e.name).join(", ") || "–"} · Bans: ${c.bans.map((b) => b.name).join(", ") || "–"}`);
 const w = data.stats.weighting;
-const weightingNote = w ? ` · recent days weighted (×${w.recencyDecay}/day)${w.balanceChange.date ? `, balance change ${w.balanceChange.date}` : ""}` : "";
+const changes = w ? [...(w.balanceChange.date ? [`balance change ${w.balanceChange.date}`] : []), ...(w.brawlerChanges ?? []).map((c) => `${c.name} changed ${c.date}`)] : [];
+const weightingNote = w ? ` · recent days weighted (×${w.recencyDecay}/day)${changes.length ? `, ${changes.join(", ")}` : ""}` : "";
 console.log(`${rec.data.mapGames.toLocaleString("en-US")} weighted games on this map, ${rec.data.games.toLocaleString("en-US")} total (${rec.data.window.from} to ${rec.data.window.to})${weightingNote}\n`);
 
 for (const [i, x] of rec.candidates.slice(0, rec.showTop).entries()) {

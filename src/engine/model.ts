@@ -114,6 +114,8 @@ export function cautious(edge: Edge, z: number): number {
 export class StatsModel {
   private readonly mode: PairStats | undefined;
   private readonly mapRecords: Record<string, Record2>;
+  private readonly mapExposure: Record<string, number>;
+  private readonly modeExposure: Record<string, number>;
   private readonly cache = new Map<string, number>();
   private readonly pairCache = new Map<string, Edge>();
   private readonly k: Weights["smoothing"];
@@ -130,6 +132,8 @@ export class StatsModel {
     const map = stats.maps[mapId];
     this.mapRecords = map?.brawlers ?? {};
     this.mapGames = map?.games ?? 0;
+    this.mapExposure = stats.exposure?.maps[mapId] ?? {};
+    this.modeExposure = stats.exposure?.modes[modeKey] ?? {};
   }
 
   private memo(key: string, compute: () => number): number {
@@ -228,10 +232,20 @@ export class StatsModel {
     return Math.sqrt((0.25 * this.weights.gamesPerDraft) / (this.mapRecord(id)[0] + this.k.map));
   }
 
+  /**
+   * Share of games on this map that had this brawler. For a brawler whose older games are discounted
+   * after a change, it's a share of the games it could have been in (see StatsData.exposure).
+   */
+  mapShare(id: number): number {
+    const games = this.mapExposure[id] ?? this.mapGames;
+    return games ? this.mapRecord(id)[0] / games : 0;
+  }
+
   /** Share of games on this map (or the mode, when the map has few games) that had this brawler. */
   pickRate(id: number): number {
-    if (this.mapGames >= MIN_MAP_GAMES_FOR_PICK_RATE) return this.mapRecord(id)[0] / this.mapGames;
-    return this.mode?.games ? this.modeRecord(id)[0] / this.mode.games : 0;
+    if (this.mapGames >= MIN_MAP_GAMES_FOR_PICK_RATE) return this.mapShare(id);
+    const games = this.modeExposure[id] ?? this.mode?.games ?? 0;
+    return games ? this.modeRecord(id)[0] / games : 0;
   }
 
   /** How much better `a` does against `b` than their win rates predict. Positive = a counters b. */

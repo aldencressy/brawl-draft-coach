@@ -82,7 +82,7 @@ export function buildWorld(games = 20_000, seed = 42): EngineData {
     const p = 0.5 + effect(teams[0], teams[1], mapId) - effect(teams[1], teams[0], mapId);
     const game: RankedGame = {
       key: String(g), day: day.date, time: 0, mode, mapId, map: `Map ${mapId}`,
-      teams, winner: rnd() < p ? 0 : 1, playerTags: [], avgRank: 15,
+      teams, winner: rnd() < p ? 0 : 1, playerTags: [], avgRank: 15, ranks: [15, 15, 15, 15, 15, 15], owner: 0,
     };
     addGame(day, game);
   }

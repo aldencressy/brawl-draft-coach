@@ -4,6 +4,7 @@ import { addGame, emptyDay, pruneDays } from "./aggregate.js";
 import type { CollectorConfig } from "./config.js";
 import { toRankedGame } from "./games.js";
 import { addPlayer, recordVisit, selectPlayers, trimPool } from "./pool.js";
+import { emptySample, offerGame } from "./sample.js";
 import type { CollectorState, RunSummary } from "./state.js";
 
 /** The parts of BrawlStarsClient the collector uses, so tests can pass a fake. */
@@ -22,6 +23,7 @@ export async function collect(
   config: CollectorConfig,
   clock: () => number = Date.now,
   log: (msg: string) => void = console.log,
+  random: () => number = Math.random,
 ): Promise<RunSummary> {
   const startedAt = clock();
   const deadline = startedAt + config.maxRunMinutes * 60_000;
@@ -101,6 +103,10 @@ export async function collect(
       (state.seen[game.day] ??= []).push(game.key);
       if (!state.days.has(game.day)) state.days.set(game.day, emptyDay(game.day));
       addGame(state.days.get(game.day)!, game);
+      if (config.sampleGamesPerDay) {
+        if (!state.samples.has(game.day)) state.samples.set(game.day, emptySample(game.day));
+        offerGame(state.samples.get(game.day)!, game, config.sampleGamesPerDay, random);
+      }
       summary.newGames++;
     }
     recordVisit(state.pool, tag, clock(), yieldCount);
@@ -116,6 +122,7 @@ export async function collect(
 
   const today = new Date(clock()).toISOString().slice(0, 10);
   for (const date of pruneDays([...state.days.keys()], today, config.windowDays).drop) state.days.delete(date);
+  for (const date of pruneDays([...state.samples.keys()], today, config.windowDays).drop) state.samples.delete(date);
   for (const date of Object.keys(state.seen)) if (date < seenCutoff) delete state.seen[date];
 
   summary.poolTrimmed = trimPool(state.pool, config.poolCap);

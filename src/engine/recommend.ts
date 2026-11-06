@@ -7,6 +7,14 @@
 // is played out: each remaining pick, in draft order, goes to the side that owns it, which takes
 // the brawler that helps it most given everything picked so far. So a strong brawler that's easy
 // to answer scores lower as a first pick than as a last pick, because the enemy gets to answer it.
+//
+// Real enemies don't always pick the best answer, though: most pick what's popular right now. So
+// each enemy pick still to come is a spread over the brawlers they could take: each starts from how
+// often it's picked on this map (the current meta), and the more it suits the board (counters your
+// team, pairs with theirs), the likelier it gets (`simulation.answerFocus`). A hard counter is
+// likely to be taken; a one-point edge barely changes the odds. Early picks are judged against
+// that spread, so they gain for doing well against the meta. At the last pick there's nothing left
+// to predict.
 import type { StaticBrawler } from "../outputs/static.js";
 import { enemyPicksAfter, teamOfSlot } from "./draft.js";
 import { StatsModel, cautious, type Edge } from "./model.js";
@@ -35,6 +43,20 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
   // Who the other players might pick in the rest of the draft: anything available that's actually
   // played on this map (they can pick brawlers you don't own).
   const pool = data.static.brawlers.filter((b) => !taken.has(b.id) && model.pickRate(b.id) >= weights.simulation.minPickRate).map((b) => b.id);
+  // How likely each is to be picked before it suits the board: how often it's picked here.
+  const choice: Choice = { prior: (e) => model.pickRate(e), focus: weights.simulation.answerFocus };
+  // A brawler's average matchup against the map's meta, weighted by how often each is picked.
+  const intoMeta = (id: number) => {
+    let sum = 0;
+    let total = 0;
+    for (const e of pool) {
+      if (e === id) continue;
+      const w = model.pickRate(e);
+      sum += w * model.vs(id, e).value;
+      total += w;
+    }
+    return total ? sum / total : 0;
+  };
 
   const rolesOf = (ids: number[]) => new Set(ids.flatMap((id) => brawlers.get(id)?.roles ?? []));
   const allyRoles = rolesOf(draft.allies);
@@ -52,15 +74,23 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     const synergy = synergies.reduce((t, s) => t + s.value, 0);
 
     // The rest of the draft, played out after this pick: the enemy's likely answers and your
-    // teammates' likely picks, and how your pick does against and with them. For each enemy pick
-    // still to come, count whichever is worse for you: the simulated answer, or the matchup this
+    // teammates' likely picks, and how your pick does against and with them. Each enemy pick still
+    // to come is a spread over what they might take (see the top of this file). For each, count
+    // whichever is worse for you: your expected matchup against that spread, or the matchup this
     // brawler really gets per enemy in its games. Real players counter popular blind picks harder
     // than the simulation does, and that history is the best evidence of it.
-    const rest = playOut(model, [...draft.allies, id], [...draft.enemies], later, pool.filter((p) => p !== id));
-    const answers = rest.enemies.map((e) => ({ id: e, name: nameOf(e), ...model.vs(e, id) }));
+    const rest = playOut(model, [...draft.allies, id], [...draft.enemies], later, pool.filter((p) => p !== id), choice);
+    // The enemy's likeliest picks across all their picks still to come, as many as they have left.
+    const chance = new Map<number, number>();
+    for (const odds of rest.enemyOdds) for (const [e, p] of odds) chance.set(e, (chance.get(e) ?? 0) + p);
+    const answers = [...chance]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, rest.enemyOdds.length)
+      .map(([e, p]) => ({ id: e, name: nameOf(e), chance: Math.round(Math.min(1, p) * 100) / 100, ...model.vs(e, id) }));
     const realMatchup = model.luck(id).perEnemy;
+    const expected = rest.enemyOdds.map((odds) => odds.reduce((t, [e, p]) => t + p * model.vs(id, e).value, 0));
     const laterValue =
-      rest.enemies.reduce((t, e) => t + Math.min(model.vs(id, e).value, realMatchup), 0) +
+      expected.reduce((t, x) => t + Math.min(x, realMatchup), 0) +
       weights.simulation.teammateWeight * rest.allies.reduce((t, a) => t + model.with(id, a).value, 0);
 
     // Role fit
@@ -109,12 +139,13 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
       details: {
         mapWinRate: Math.round(r.mapRate * 1000) / 1000,
         mapGames: r.mapGames,
-        mapPickRate: model.mapGames ? Math.round((r.mapGames / model.mapGames) * 1000) / 1000 : 0,
+        mapPickRate: Math.round(model.mapShare(id) * 1000) / 1000,
         usedModeFallback: r.mapGames < weights.smoothing.map,
         counters: r.counters.map(detail),
         synergies: r.synergies.map(detail),
         // The enemy's likely answers to this pick, worst for you first.
-        threats: r.answers.map(detail).sort((a, b) => b.points - a.points),
+        threats: r.answers.map((x) => ({ ...detail(x), chance: x.chance })).sort((a, b) => b.points - a.points),
+        intoMeta: points(intoMeta(id)),
         likelyTeammates: named(r.teammates),
         rolesFilled: r.rolesFilled,
         rolesDuplicated: r.rolesDuplicated,
@@ -180,9 +211,18 @@ function pickValue(model: StatsModel, b: number, own: number[], other: number[])
   return v;
 }
 
+/** How the enemy is assumed to choose: see the top of this file. */
+export interface Choice {
+  /** How likely a brawler is to be picked before the board is considered (its pick rate here). */
+  prior: (b: number) => number;
+  /** How much suiting the board raises the odds: a pick worth x more here is e^(focus * x) times as likely. */
+  focus: number;
+}
+
 /**
  * Plays out the remaining picks: each goes to the side that owns it, which takes the pool
- * brawler worth most to it right now. Returns the brawlers each side adds.
+ * brawler worth most to it right now. Returns the brawlers each side adds and, with a `choice`,
+ * the odds of each brawler at every enemy pick (on the board as played out up to that pick).
  */
 export function playOut(
   model: StatsModel,
@@ -190,27 +230,42 @@ export function playOut(
   enemies: number[],
   picks: Array<"ally" | "enemy">,
   pool: number[],
-): { allies: number[]; enemies: number[] } {
+  choice?: Choice,
+): { allies: number[]; enemies: number[]; enemyOdds: Array<Array<[number, number]>> } {
   const ours = [...allies];
   const theirs = [...enemies];
   const used = new Set([...allies, ...enemies]);
-  const added = { allies: [] as number[], enemies: [] as number[] };
+  const added = { allies: [] as number[], enemies: [] as number[], enemyOdds: [] as Array<Array<[number, number]>> };
   for (const side of picks) {
     const own = side === "ally" ? ours : theirs;
     const other = side === "ally" ? theirs : ours;
     let best: number | undefined;
     let bestValue = -Infinity;
+    const options: Array<[number, number]> = [];
     for (const b of pool) {
       if (used.has(b)) continue;
       const v = pickValue(model, b, own, other);
       if (v > bestValue) [best, bestValue] = [b, v];
+      // How much it suits this board, beyond its strength on the map (which its pick rate already shows).
+      if (choice && side === "enemy") options.push([b, v - (model.strength(b) - 0.5)]);
     }
     if (best === undefined) break;
+    if (choice && side === "enemy") added.enemyOdds.push(odds(options, choice));
     own.push(best);
     used.add(best);
     (side === "ally" ? added.allies : added.enemies).push(best);
   }
   return added;
+}
+
+/** Each option's chance of being picked: prior times e^(focus * fit), normalized. */
+function odds(options: Array<[number, number]>, choice: Choice): Array<[number, number]> {
+  const top = Math.max(...options.map(([, fit]) => fit));
+  const weighted = options.map(([b, fit]): [number, number] => [b, choice.prior(b) * Math.exp(choice.focus * (fit - top))]);
+  const total = weighted.reduce((t, [, w]) => t + w, 0);
+  // With no prior to go on (nobody picks any of them here), every option is equally likely.
+  if (total === 0) return options.map(([b]) => [b, 1 / options.length]);
+  return weighted.map(([b, w]) => [b, w / total]);
 }
 
 /** The most-picked brawlers on this map: what the map rewards at this rank. */
@@ -240,8 +295,12 @@ function reasonsFor(c: ScoredCandidate, weights: Weights, enemyStillToPick: bool
   const named = (prefix: string) => tags.some((t) => t.text.startsWith(prefix));
   if (c.parts.counter >= min && !named("Counters")) tags.push({ text: "Good into their picks", points: c.parts.counter });
   if (c.parts.synergy >= min && !named("Pairs with")) tags.push({ text: "Fits your team", points: c.parts.synergy });
-  // The rest of the draft goes well after this pick: the enemy has no good answer to it.
-  if (enemyStillToPick && c.parts.later >= min) tags.push({ text: "Hard to answer", points: c.parts.later });
+  // The rest of the draft goes well after this pick: the enemy has no good answer to it, often
+  // because it beats what people pick here right now.
+  if (enemyStillToPick && c.parts.later >= min) {
+    const fromMeta = c.details.intoMeta * c.details.threats.length >= min;
+    tags.push({ text: fromMeta ? "Good into the meta" : "Hard to answer", points: c.parts.later });
+  }
   for (const target of c.details.rolesAnswering) tags.push({ text: `Answers their ${target}`, points: c.parts.role });
   if (!c.details.rolesAnswering.length && c.parts.role >= min && c.details.rolesFilled[0]) {
     tags.push({ text: `Adds ${c.details.rolesFilled[0]}`, points: c.parts.role });

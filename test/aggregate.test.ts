@@ -16,6 +16,8 @@ const game: RankedGame = {
   winner: 0,
   playerTags: [],
   avgRank: 15,
+  ranks: [15, 15, 15, 15, 15, 15],
+  owner: 0,
 };
 
 describe("addGame", () => {

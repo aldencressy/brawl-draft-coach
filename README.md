@@ -95,9 +95,14 @@ It emails a warning first; re-enable from the Actions tab if that happens.
   19–21 Masters.
 - **Each game once:** a game appears in up to six players' logs; it's identified by its time and
   players. One draft is played as a set of 2–3 games, and each game counts separately.
-- **Totals, not raw games:** per UTC day, `days/<date>.json` holds per-map brawler games and
-  wins, plus per-mode matchups (`vs`) and teammate pairs (`with`). Days older than `windowDays`
-  are dropped.
+- **Totals:** per UTC day, `days/<date>.json` holds per-map brawler games and wins, plus per-mode
+  matchups (`vs`) and teammate pairs (`with`). Days older than `windowDays` are dropped.
+- **A sample of whole games:** `games/<date>.json` keeps up to `sampleGamesPerDay` of each day's
+  games whole, picked uniformly from the whole day (reservoir sampling). Each row is the time, map,
+  winner, the six brawlers in the order the API lists them, where the log's owner sits in that
+  order, and each player's rank (`fields` in the file names them). The totals can't answer two
+  things this can: whether the API lists each team in pick order, and how well the engine predicts
+  real results (a backtest). Same window as the totals.
 
 ### Player pool
 
@@ -111,12 +116,14 @@ dropped.
 Each run writes these to `out/` on the `data` branch:
 
 - **`stats.json`**: ranked games over the window, weighted by day (`recencyDecay`,
-  `balanceChange`), so its counts are weighted games; `games` is the raw total and
-  `effectiveGames` the weighted one.
+  `balanceChange`, `brawlerChanges`), so its counts are weighted games; `games` is the raw total
+  and `effectiveGames` the weighted one.
   - `maps[mapId]`: games on the map, and `brawlers[id] = [games, wins]`.
   - `modes[mode]` and `overall` (all modes combined): `brawlers`, plus `vs["a-b"] = [games, wins for a]`
     (a is the lower id) and `with["a-b"] = [games, wins together]`.
   - `currentMaps`: maps played in the last 2 days, most played first.
+  - `exposure` (only with `brawlerChanges`): for each changed brawler, the weighted games it could
+    have been in, per map and mode, so its pick rate isn't lowered by its discounted older games.
   - `window`, `games`, `minRank`, `generatedAt`.
 - **`static.json`**: every brawler with display name, class, image, roles, gadgets and star powers
   (with descriptions), hypercharges, gears and its `build`; plus ranked maps and modes.
@@ -168,8 +175,8 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 
 - **Gadget** and **Star power**: all of its options, with the recommended one in gold and a close
   second dashed. Hover an item for its description.
-- **Likely answers** (early picks): the enemy's likely answers that do well against it, from
-  playing out the rest of the draft, with how many points each costs you.
+- **Likely answers** (early picks): the enemy's likeliest picks after yours that do well against
+  it, with how many points each costs you.
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.
 - Items you don't own are struck through, with a note if the recommended build needs one.
 
@@ -238,12 +245,25 @@ to it (strength plus pairs with its team and matchups against the other), from b
 played on the map. A strong brawler that's easy to answer therefore scores lower as a first pick
 than as a last pick, because the enemy gets to answer it.
 
+**The enemy's picks follow the meta.** Real players don't always take the best answer; most pick
+what's popular. So each enemy pick still to come is a spread over the brawlers they could take:
+each starts from how often it's picked on this map, and the more it suits the board (counters your
+team, pairs with theirs), the likelier it gets. A pick worth x more on this board is
+e^(`answerFocus` × x) times as likely, so a hard counter is likely to be taken and a one-point
+edge barely changes the odds. Your pick is judged against that spread, so it gains for beating
+the current meta and loses for having a popular counter. Example: on Hideout, Colt beats Brock by
+about 5 points and is in 11% of games, so a first-pick Brock expects Colt about half the time.
+
+`answerFocus` (in `simulation`) is a guess until it can be fitted from real picks. Lower values
+(enemies mostly pick what's popular) make first and last picks *more* alike, because the counter
+risk averages out; 100 keeps it about where it was before the meta weighting.
+
 | Part | What it measures |
 |---|---|
 | `map` | Strength on this map, with matchup and team luck removed (see below) |
 | `counter` | Matchups against the enemies already picked (summed) |
 | `synergy` | Pairs with the allies already picked (summed) |
-| `later` | Matchups against the enemy's likely answers and pairs with your likely teammates, from playing out the rest of the draft (0 at the last pick) |
+| `later` | Matchups against the enemy's likely picks (a spread that follows the meta, see above) and pairs with your likely teammates, from playing out the rest of the draft (0 at the last pick) |
 | `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles`, × `roleWeight`) |
 | `comfort` | How much better you do on it than everyone else, from your own ranked games (× `comfortWeight`) |
 | `unproven` | A cost for having few games on this map: the less evidence, the bigger it is |
@@ -267,14 +287,16 @@ Real data's pair effects are bell-shaped (checked: kurtosis ~3.0), which is what
 picked when it's safe (late, into no counters) enjoy good matchups; popular blind picks get
 countered. `map` uses strength with that luck removed, so matchups are only counted once: from
 the actual board, or from the predicted rest of the draft. For each enemy pick still to come,
-`later` counts whichever is worse for you: the simulated answer, or the matchup the brawler really
-gets per enemy in its games (real players counter popular blind picks harder than the simulation).
+`later` counts whichever is worse for you: your expected matchup against the enemy's likely picks,
+or the matchup the brawler really gets per enemy in its games (real players counter popular blind
+picks harder than the simulation).
 
 **Output** (`Recommendation` in `src/engine/types.ts`) is plain JSON: the draft context, data
 freshness, the map's most-picked brawlers (`data.mapMeta`), and the top `handOffTop` candidates,
 each with its score, the parts, up to three reason tags, a warning (rarely picked here, or likely
-enemy answers that clearly beat it), the build, the predicted enemy answers and teammates, and the
-details behind each part. The UI shows the first `showTop`; the AI layer gets all of them.
+enemy answers that clearly beat it), the build, the enemy's likeliest picks (with the chance of
+each) and your likely teammates, how it does against the map's meta (`intoMeta`), and the details
+behind each part. The UI shows the first `showTop`; the AI layer gets all of them.
 
 **Draft order** is in `config/draft.json`: which team makes each of the six picks.
 
@@ -335,8 +357,10 @@ Collector settings are in `config/collector.json`:
 | `concurrency` | `6` | Logs fetched in parallel (still within the rate limit) |
 | `windowDays` | `7` | Days of totals kept |
 | `seenKeyDays` | `3` | Days of game IDs kept for dedupe |
+| `sampleGamesPerDay` | `40000` | Games per day kept whole in `games/<date>.json` (0 = none): about 4 MB a day (under 1 MB compressed) |
 | `recencyDecay` | `0.85` | In `stats.json`, each day counts this much relative to the next one (1 = all equal) |
-| `balanceChange` | `{"date": null, "weightBefore": 0}` | After a balance patch or buffy release, set `date` to the day it went live; days before it count `weightBefore` (0 = dropped) |
+| `balanceChange` | `{"date": null, "weightBefore": 0}` | After a balance patch that changes many brawlers, set `date` to the day it went live; days before it count `weightBefore` (0 = dropped) |
+| `brawlerChanges` | `[]` | After a change to one or a few brawlers (a buff, a nerf, new Buffies): only their older games are discounted (see below) |
 
 ### After a balance change
 
@@ -351,6 +375,20 @@ The next hourly run rebuilds `stats.json` from that day on; the page header then
 which helps for the first day or two when post-patch data is thin. Set `date` back to `null`
 once the window has moved past it. The raw daily totals on the `data` branch are never changed,
 so either setting can be undone.
+
+When only a few brawlers change (a single buff or nerf, a brawler's new Buffies), discount just
+their games instead, and keep everyone else's:
+
+```json
+"brawlerChanges": [
+  { "brawler": "Mr. P", "date": "2026-11-05", "weightBefore": 0 }
+]
+```
+
+That brawler's games before `date`, and its matchups and pairs, count `weightBefore` as much
+(default 0). Names are matched loosely ("mr p" works); an unknown name is reported in the run log
+and skipped. Its pick rate is measured against the games it could have been in, so it doesn't
+look rarely picked while its older games are discounted.
 
 ## Development
 
