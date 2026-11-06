@@ -161,8 +161,13 @@ first), then press <kbd>1</kbd>–<kbd>6</kbd> for your pick slot.
 <kbd>Enter</kbd>; the brawler goes where the draft expects next, following the pick order from
 your side, including your own pick.
 
-- **No bans to enter.** The draft starts at picks. If a suggestion turns out to be banned, take the
-  next one. (To record a ban anyway, type it with `!`, e.g. `!colt`.)
+- **Only the bans that matter, one tap each.** The draft starts at picks, and nothing waits on
+  bans. While the enemy still has picks after yours, the panel tries the bans that could change
+  your pick and shows only those, above the suggestions: "If banned: Colt → Brock #1" means that if
+  Colt is banned, Brock becomes the top pick (banning Colt takes away the enemy's answer to him).
+  Tap a chip if that brawler really is banned; the suggestions and chips update. The #1 suggestion
+  has its own "If banned → …" button. At the last pick bans can't change the answer, so none are
+  shown. To record any other ban, type it with `!`, e.g. `!colt`.
 - Override where an entry goes with a prefix (`-crow` enemy, `+gene` ally), with <kbd>Tab</kbd>,
   or with the Ally / Enemy buttons.
 - <kbd>↑</kbd>/<kbd>↓</kbd> choose among matches, <kbd>Esc</kbd> clears, <kbd>Ctrl</kbd>+<kbd>Z</kbd>

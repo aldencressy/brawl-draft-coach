@@ -2,8 +2,9 @@
 // every entry re-runs the scoring engine (a few milliseconds) and re-renders.
 import draftJson from "../../config/draft.json";
 import weightsJson from "../../config/weights.json";
+import { banHints, type BanHints } from "../../src/engine/bans.js";
 import { recommend } from "../../src/engine/recommend.js";
-import type { DraftConfig, EngineData, Recommendation, ScoredCandidate, Weights } from "../../src/engine/types.js";
+import type { Draft, DraftConfig, EngineData, Recommendation, ScoredCandidate, Weights } from "../../src/engine/types.js";
 import type { RosterData } from "../../src/outputs/me.js";
 import type { StaticBrawler, StaticData } from "../../src/outputs/static.js";
 import type { StatsData } from "../../src/outputs/stats.js";
@@ -122,9 +123,39 @@ function suggestions(): Recommendation | null {
   if (!state.mapId || !state.mySlot) return null;
   const mine = myPickId(order, state);
   if (mine !== null && state.frozen?.pick === mine) return state.frozen.rec;
+  return recommend(currentDraft()!, data, weights, { order });
+}
+
+/** The draft as the engine sees it, leaving out your own pick once it's in. */
+function currentDraft(): Draft | null {
+  if (!state.mapId || !state.mySlot) return null;
+  const mine = myPickId(order, state);
   const allies = state.picks.filter((p) => p.side === "ally" && p.id !== mine).map((p) => p.id);
   const enemies = state.picks.filter((p) => p.side === "enemy").map((p) => p.id);
-  return recommend({ mapId: state.mapId, mySlot: state.mySlot, bans: state.bans, allies, enemies }, data, weights, { order });
+  return { mapId: state.mapId, mySlot: state.mySlot, bans: state.bans, allies, enemies };
+}
+
+/**
+ * Bans that would change your pick, worked out just after the suggestions are drawn (it takes a
+ * few engine runs), then drawn in. Only before your pick and while the enemy still picks after you.
+ */
+const hintCache = new Map<string, BanHints>();
+let hintTimer: ReturnType<typeof setTimeout> | undefined;
+
+function hintsFor(rec: Recommendation): BanHints | undefined {
+  const draft = currentDraft();
+  if (!draft || myPickId(order, state) !== null || !rec.context.enemyPicksAfterMine) return undefined;
+  const key = JSON.stringify(draft);
+  const cached = hintCache.get(key);
+  if (cached) return cached;
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => {
+    if (hintCache.size > 50) hintCache.clear();
+    hintCache.set(key, banHints(draft, data, weights, { order }, rec));
+    // Draw them in if the draft hasn't moved on meanwhile.
+    if (JSON.stringify(currentDraft()) === key) renderSuggestions(rec);
+  }, 0);
+  return undefined;
 }
 
 // ---------- actions ----------
@@ -429,17 +460,31 @@ function renderSuggestions(rec: Recommendation | null): void {
   const shown = rec.candidates.slice(0, rec.showTop);
   const rest = rec.candidates.slice(rec.showTop);
   const myRank = mine !== null ? rec.candidates.findIndex((x) => x.id === mine) : -1;
+  const hints = hintsFor(rec);
 
   el.innerHTML = `
     <h2><span>Your pick</span><span>${c.enemyPicksAfterMine ? `${c.enemyPicksAfterMine} enemy pick${c.enemyPicksAfterMine > 1 ? "s" : ""} after you` : "last word"}</span></h2>
     <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}</div>
     ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
-    ${shown.map((x, i) => candidateHtml(x, i, x.id === mine)).join("")}
+    ${banChipsHtml(hints)}
+    ${shown.map((x, i) => candidateHtml(x, i, x.id === mine, i === 0 ? hints?.ifTopBanned : undefined)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
     ${!rec.candidates.length ? `<div class="done">Nothing left to suggest from your roster.</div>` : ""}`;
+  el.querySelectorAll<HTMLElement>("[data-ban]").forEach((b) =>
+    b.addEventListener("click", () => enter(Number(b.dataset.ban), "ban")),
+  );
 }
 
-function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
+/** One-tap bans: only the ones that would change your pick. */
+function banChipsHtml(hints: BanHints | undefined): string {
+  if (!hints?.chips.length) return "";
+  const chips = hints.chips
+    .map((c) => `<button class="banchip" data-ban="${c.id}" title="Tap if ${esc(c.name)} is banned">${esc(c.name)} <span>→ ${esc(c.rises.name)} #${c.rises.rank}</span></button>`)
+    .join("");
+  return `<div class="banchips"><span>If banned (tap to update):</span>${chips}</div>`;
+}
+
+function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean, ifBanned?: { name: string }): string {
   const parts = Object.entries(x.parts)
     .filter(([, v]) => v !== 0)
     .map(([k, v]) => `<span class="${v > 0 ? "p" : "n"}">${k} ${signed(v)}</span>`)
@@ -455,6 +500,7 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
     <div class="why">${x.reasons.map((r) => `<span>${esc(r)}</span>`).join("") || `<span class="fresh">No standout reason</span>`}</div>
     <div class="extra">
       <span class="onmap">${onMap}</span>
+      ${ifBanned ? `<span class="ifban"><button class="banchip" data-ban="${x.id}" title="Tap if ${esc(x.name)} is banned">If banned</button> → ${esc(ifBanned.name)}</span>` : ""}
       ${answersHtml(x)}
       ${x.warning ? `<span class="warn">⚠ ${esc(x.warning)}</span>` : ""}
       ${kitHtml(x.id)}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { enemyPicksAfter, slotsOf, teamOfSlot } from "../src/engine/draft.js";
 import { StatsModel } from "../src/engine/model.js";
+import { banHints } from "../src/engine/bans.js";
 import { playOut, recommend } from "../src/engine/recommend.js";
 import type { Draft, Weights } from "../src/engine/types.js";
 import { B, BOUNTY_MAP, GEM_FORT, buildWorld, draftConfig, weights } from "./engineWorld.js";
@@ -247,5 +248,44 @@ describe("recommend: speed", () => {
     const start = performance.now();
     for (let i = 0; i < 10; i++) recommend(draft({ mySlot: 4, allies: [1001], enemies: [1002, 1003] }), big, weights, draftConfig);
     expect((performance.now() - start) / 10).toBeLessThan(50);
+  });
+});
+
+describe("ban hints", () => {
+  const hints = (d: Partial<Draft>) => {
+    const rec = run(d);
+    return { rec, hints: banHints(draft(d), world, weights, draftConfig, rec) };
+  };
+
+  it("first pick: banning the enemy's answer to a brawler lifts it", () => {
+    const { rec, hints: h } = hints({ mySlot: 1 });
+    // Bully is the answer that holds Fragile back; banning it brings Fragile up.
+    const bully = h.chips.find((c) => c.id === B.Bully);
+    expect(bully?.rises.id).toBe(B.Fragile);
+    const banned = run({ mySlot: 1, bans: [B.Bully] });
+    expect(rankOf(banned, B.Fragile)).toBeLessThan(rankOf(rec, B.Fragile));
+    expect(rankOf(banned, B.Fragile) + 1).toBe(bully!.rises.rank);
+  });
+
+  it("says what comes first if the top suggestion is banned", () => {
+    const { rec, hints: h } = hints({ mySlot: 1 });
+    expect(h.ifTopBanned?.id).toBe(top(run({ mySlot: 1, bans: [top(rec).id] })).id);
+    expect(h.ifTopBanned?.id).not.toBe(top(rec).id);
+  });
+
+  it("only offers bans that bring a real gain, never the top suggestion itself", () => {
+    const { rec, hints: h } = hints({ mySlot: 1 });
+    for (const c of h.chips) {
+      expect(c.id).not.toBe(top(rec).id);
+      const after = run({ mySlot: 1, bans: [c.id] });
+      const riser = after.candidates[c.rises.rank - 1]!;
+      expect(riser.id).toBe(c.rises.id);
+      if (c.rises.rank > 1) expect(riser.score - rec.candidates.find((x) => x.id === riser.id)!.score).toBeGreaterThanOrEqual(weights.reasonMinPoints);
+    }
+  });
+
+  it("offers nothing at the last pick, where bans can't change the answer", () => {
+    const h = hints({ mySlot: 6, allies: [B.Filler1, B.Tank], enemies: [B.Filler2, B.Unowned, B.Prey] }).hints;
+    expect(h).toEqual({ chips: [] });
   });
 });
