@@ -1,23 +1,18 @@
 // The scoring engine: a pure function from a draft to ranked suggestions for your pick.
 // No I/O, so it runs the same in tests, the CLI and the browser.
+//
+// Every pick is judged the same way: by its own part in the completed 3v3. That's its strength
+// on the map (with matchup luck removed) plus its pair effect with every enemy and every teammate
+// on the final board. For a last pick the board is known. For earlier picks the rest of the draft
+// is played out: each remaining pick, in draft order, goes to the side that owns it, which takes
+// the brawler that helps it most given everything picked so far. So a strong brawler that's easy
+// to answer scores lower as a first pick than as a last pick, because the enemy gets to answer it.
 import type { StaticBrawler } from "../outputs/static.js";
 import { enemyPicksAfter, teamOfSlot } from "./draft.js";
 import { StatsModel, cautious, type Edge } from "./model.js";
-import type {
-  Draft,
-  DraftConfig,
-  EngineData,
-  MetaPick,
-  Part,
-  PairDetail,
-  PartWeights,
-  Recommendation,
-  ScoredCandidate,
-  Weights,
-} from "./types.js";
+import type { Draft, DraftConfig, EngineData, MetaPick, Part, PairDetail, Recommendation, ScoredCandidate, Team, Weights } from "./types.js";
 
 const points = (p: number) => Math.round(p * 1000) / 10 || 0; // 0.0234 -> 2.3, and no -0
-const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
 export function recommend(draft: Draft, data: EngineData, weights: Weights, draftConfig: DraftConfig): Recommendation {
   const brawlers = new Map(data.static.brawlers.map((b) => [b.id, b]));
@@ -30,20 +25,16 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
 
   const myTeam = teamOfSlot(draftConfig.order, draft.mySlot);
   const enemyLeft = enemyPicksAfter(draftConfig.order, draft.mySlot, draft.enemies.length);
-  const w = weights.byPick[String(draft.mySlot)];
-  if (!w) throw new Error(`weights.byPick has no entry for slot ${draft.mySlot}`);
+  const later = remainingPicks(draftConfig.order, myTeam, draft);
 
   const taken = new Set([...draft.bans, ...draft.allies, ...draft.enemies]);
   const owned = data.roster
     ? new Map(data.roster.brawlers.filter((b) => b.power >= weights.minPower).map((b) => [b.id, b]))
     : undefined;
   const candidates = data.static.brawlers.filter((b) => !taken.has(b.id) && (!owned || owned.has(b.id)));
-  // The enemy can pick anything still available, not just what you own.
-  const enemyPool = data.static.brawlers.filter((b) => !taken.has(b.id));
-
-  // Brawlers the enemy might realistically pick to counter you: played on this map and not losing on it.
-  const r = weights.risk;
-  const plausibleEnemies = enemyPool.filter((e) => model.pickRate(e.id) >= r.minPickRate && model.mapRate(e.id) >= r.minMapWinRate);
+  // Who the other players might pick in the rest of the draft: anything available that's actually
+  // played on this map (they can pick brawlers you don't own).
+  const pool = data.static.brawlers.filter((b) => !taken.has(b.id) && model.pickRate(b.id) >= weights.simulation.minPickRate).map((b) => b.id);
 
   const rolesOf = (ids: number[]) => new Set(ids.flatMap((id) => brawlers.get(id)?.roles ?? []));
   const allyRoles = rolesOf(draft.allies);
@@ -51,31 +42,26 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
 
   const scored = candidates.map((b): ScoredCandidate => {
     const id = b.id;
-
-    // Map strength
     const mapRate = model.mapRate(id);
-    const map = mapRate - 0.5;
     const [mapGames] = model.mapRecord(id);
 
-    // Counter value and synergy against what's already picked
-    const counters = draft.enemies.map((e) => ({ id: e, name: nameOf(e), ...model.vs(id, e), z: 1 }));
-    const synergies = draft.allies.map((a) => ({ id: a, name: nameOf(a), ...model.with(id, a), z: 1 }));
-    const counter = mean(counters.map((c) => c.value));
-    const synergy = mean(synergies.map((s) => s.value));
+    // Your pick's own contribution to the 3v3 with what's already on the board.
+    const counters = draft.enemies.map((e) => ({ id: e, name: nameOf(e), ...model.vs(id, e) }));
+    const synergies = draft.allies.map((a) => ({ id: a, name: nameOf(a), ...model.with(id, a) }));
+    const counter = counters.reduce((t, c) => t + c.value, 0);
+    const synergy = synergies.reduce((t, s) => t + s.value, 0);
 
-    // Counter risk: the enemy's best remaining counters, scaled by the picks they have left.
-    // Ranked by a cautious edge (risk.z standard errors lower): the worst of dozens of noisy
-    // matchups always looks bad by chance, which would punish the brawlers with the most data.
-    let threats: Array<Edge & { id: number; name: string; z: number }> = [];
-    let risk = 0;
-    if (enemyLeft > 0) {
-      threats = plausibleEnemies
-        .filter((e) => e.id !== id)
-        .map((e) => ({ id: e.id, name: e.name, ...model.vs(e.id, id), z: r.z }))
-        .sort((a, b) => cautious(b, r.z) - cautious(a, r.z))
-        .slice(0, r.weights.length);
-      risk = threats.reduce((sum, t, i) => sum + r.weights[i]! * Math.max(0, cautious(t, r.z)), 0) * (enemyLeft / 3);
-    }
+    // The rest of the draft, played out after this pick: the enemy's likely answers and your
+    // teammates' likely picks, and how your pick does against and with them. For each enemy pick
+    // still to come, count whichever is worse for you: the simulated answer, or the matchup this
+    // brawler really gets per enemy in its games. Real players counter popular blind picks harder
+    // than the simulation does, and that history is the best evidence of it.
+    const rest = playOut(model, [...draft.allies, id], [...draft.enemies], later, pool.filter((p) => p !== id));
+    const answers = rest.enemies.map((e) => ({ id: e, name: nameOf(e), ...model.vs(e, id) }));
+    const realMatchup = model.luck(id).perEnemy;
+    const laterValue =
+      rest.enemies.reduce((t, e) => t + Math.min(model.vs(id, e).value, realMatchup), 0) +
+      weights.simulation.teammateWeight * rest.allies.reduce((t, a) => t + model.with(id, a).value, 0);
 
     // Role fit
     const ro = weights.roles;
@@ -93,57 +79,53 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     // Unproven: the less we know about it here, the more it costs (see weights.uncertainty).
     const unproven = weights.uncertainty.z * model.mapRateError(id);
 
+    const r = { b, mapRate, mapGames, counters, synergies, answers, teammates: rest.allies, rolesFilled, rolesDuplicated, rolesAnswering, personal };
     const parts: Record<Part, number> = {
-      map: points(map * w.map),
-      counter: points(counter * w.counter),
-      synergy: points(synergy * w.synergy),
-      risk: points(-risk * w.risk),
-      role: points(role * w.role),
-      comfort: points(comfort * w.comfort),
+      map: points(model.strength(id) - 0.5),
+      counter: points(counter),
+      synergy: points(synergy),
+      later: points(laterValue),
+      role: points(role * weights.roleWeight),
+      comfort: points(comfort * weights.comfortWeight),
       unproven: points(-unproven),
     };
     const score = Math.round(Object.values(parts).reduce((a, v) => a + v, 0) * 10) / 10;
-    const detail = (x: Edge & { id: number; name: string; z: number }): PairDetail => ({
+    const detail = (x: Edge & { id: number; name: string }): PairDetail => ({
       id: x.id,
       name: x.name,
       points: points(x.value),
-      low: points(cautious(x, x.z)),
+      low: points(cautious(x, 1)),
       games: x.games,
     });
 
     const candidate: ScoredCandidate = {
-      id,
-      name: b.name,
+      id: r.b.id,
+      name: r.b.name,
       score,
       parts,
       reasons: [],
-      lowData: mapGames < weights.lowDataGames,
-      build: buildNames(b),
+      lowData: r.mapGames < weights.lowDataGames,
+      build: buildNames(r.b),
       details: {
-        mapWinRate: Math.round(mapRate * 1000) / 1000,
-        mapGames,
-        mapPickRate: model.mapGames ? Math.round((mapGames / model.mapGames) * 1000) / 1000 : 0,
-        usedModeFallback: mapGames < weights.smoothing.map,
-        counters: counters.map(detail),
-        synergies: synergies.map(detail),
-        threats: threats.map(detail),
-        rolesFilled,
-        rolesDuplicated,
-        rolesAnswering,
-        personal,
+        mapWinRate: Math.round(r.mapRate * 1000) / 1000,
+        mapGames: r.mapGames,
+        mapPickRate: model.mapGames ? Math.round((r.mapGames / model.mapGames) * 1000) / 1000 : 0,
+        usedModeFallback: r.mapGames < weights.smoothing.map,
+        counters: r.counters.map(detail),
+        synergies: r.synergies.map(detail),
+        // The enemy's likely answers to this pick, worst for you first.
+        threats: r.answers.map(detail).sort((a, b) => b.points - a.points),
+        likelyTeammates: named(r.teammates),
+        rolesFilled: r.rolesFilled,
+        rolesDuplicated: r.rolesDuplicated,
+        rolesAnswering: r.rolesAnswering,
+        personal: r.personal,
       },
     };
     candidate.warning = warningFor(candidate, weights);
+    candidate.reasons = reasonsFor(candidate, weights, enemyLeft > 0);
     return candidate;
   });
-
-  // "Hard to counter": no counter the enemy is likely to pick beats it by a clear margin. Only
-  // worth saying when it sets a brawler apart, i.e. when most candidates do have such a counter.
-  const safe = new Set(
-    enemyLeft > 0 && w.risk > 0 ? scored.filter((c) => (c.details.threats[0]?.low ?? 0) < weights.reasonMinPoints).map((c) => c.id) : [],
-  );
-  const tagSafe = safe.size <= scored.length / 2;
-  for (const c of scored) c.reasons = reasonsFor(c, weights, w, tagSafe && safe.has(c.id));
 
   scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
@@ -159,7 +141,6 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
       allies: named(draft.allies),
       enemies: named(draft.enemies),
       bans: named(draft.bans),
-      weights: w,
     },
     data: {
       games: data.stats.games,
@@ -171,6 +152,65 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     candidates: scored.slice(0, Math.max(weights.handOffTop, weights.showTop)),
     showTop: weights.showTop,
   };
+}
+
+/**
+ * Which picks are still to come after yours, in draft order, as the side that makes each one.
+ * Entered picks fill each side's slots in order; your own slot is left out.
+ */
+export function remainingPicks(order: DraftConfig["order"], myTeam: Team, draft: Pick<Draft, "mySlot" | "allies" | "enemies">): Array<"ally" | "enemy"> {
+  let allies = draft.allies.length;
+  let enemies = draft.enemies.length;
+  const out: Array<"ally" | "enemy"> = [];
+  order.forEach((team, i) => {
+    if (i + 1 === draft.mySlot) return;
+    const side = team === myTeam ? "ally" : "enemy";
+    if (side === "ally" && allies > 0) allies--;
+    else if (side === "enemy" && enemies > 0) enemies--;
+    else out.push(side);
+  });
+  return out;
+}
+
+/** What adding `b` is worth to its side: its strength here plus its pair effects with the board. */
+function pickValue(model: StatsModel, b: number, own: number[], other: number[]): number {
+  let v = model.strength(b) - 0.5;
+  for (const a of own) v += model.with(b, a).value;
+  for (const o of other) v += model.vs(b, o).value;
+  return v;
+}
+
+/**
+ * Plays out the remaining picks: each goes to the side that owns it, which takes the pool
+ * brawler worth most to it right now. Returns the brawlers each side adds.
+ */
+export function playOut(
+  model: StatsModel,
+  allies: number[],
+  enemies: number[],
+  picks: Array<"ally" | "enemy">,
+  pool: number[],
+): { allies: number[]; enemies: number[] } {
+  const ours = [...allies];
+  const theirs = [...enemies];
+  const used = new Set([...allies, ...enemies]);
+  const added = { allies: [] as number[], enemies: [] as number[] };
+  for (const side of picks) {
+    const own = side === "ally" ? ours : theirs;
+    const other = side === "ally" ? theirs : ours;
+    let best: number | undefined;
+    let bestValue = -Infinity;
+    for (const b of pool) {
+      if (used.has(b)) continue;
+      const v = pickValue(model, b, own, other);
+      if (v > bestValue) [best, bestValue] = [b, v];
+    }
+    if (best === undefined) break;
+    own.push(best);
+    used.add(best);
+    (side === "ally" ? added.allies : added.enemies).push(best);
+  }
+  return added;
 }
 
 /** The most-picked brawlers on this map: what the map rewards at this rank. */
@@ -186,7 +226,7 @@ function mapMeta(model: StatsModel, data: EngineData, count: number): MetaPick[]
 }
 
 /** Short tags for the strongest positive parts, best first, at most three. */
-function reasonsFor(c: ScoredCandidate, weights: Weights, w: PartWeights, hardToCounter: boolean): string[] {
+function reasonsFor(c: ScoredCandidate, weights: Weights, enemyStillToPick: boolean): string[] {
   const min = weights.reasonMinPoints;
   const tags: Array<{ text: string; points: number }> = [];
   const pct = Math.round(c.details.mapWinRate * 100);
@@ -194,14 +234,14 @@ function reasonsFor(c: ScoredCandidate, weights: Weights, w: PartWeights, hardTo
   // Only claim map strength from this map's own games, not from what carried over.
   if (c.parts.map >= min && !c.lowData) tags.push({ text: `Strong on map (${pct}%)`, points: c.parts.map });
   // Only name matchups that hold up after allowing for noise.
-  // Only name matchups and pairs that the score at this pick slot actually counts.
-  if (w.counter > 0) for (const x of c.details.counters) if (x.points >= min && x.low > 0) tags.push({ text: `Counters ${x.name}`, points: x.points });
-  if (w.synergy > 0) for (const x of c.details.synergies) if (x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: x.points });
+  for (const x of c.details.counters) if (x.points >= min && x.low > 0) tags.push({ text: `Counters ${x.name}`, points: x.points });
+  for (const x of c.details.synergies) if (x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: x.points });
   // Small edges against (or with) everyone can add up even when no single one stands out.
   const named = (prefix: string) => tags.some((t) => t.text.startsWith(prefix));
   if (c.parts.counter >= min && !named("Counters")) tags.push({ text: "Good into their picks", points: c.parts.counter });
   if (c.parts.synergy >= min && !named("Pairs with")) tags.push({ text: "Fits your team", points: c.parts.synergy });
-  if (hardToCounter) tags.push({ text: "Hard to counter", points: min });
+  // The rest of the draft goes well after this pick: the enemy has no good answer to it.
+  if (enemyStillToPick && c.parts.later >= min) tags.push({ text: "Hard to answer", points: c.parts.later });
   for (const target of c.details.rolesAnswering) tags.push({ text: `Answers their ${target}`, points: c.parts.role });
   if (!c.details.rolesAnswering.length && c.parts.role >= min && c.details.rolesFilled[0]) {
     tags.push({ text: `Adds ${c.details.rolesFilled[0]}`, points: c.parts.role });
@@ -219,8 +259,9 @@ function reasonsFor(c: ScoredCandidate, weights: Weights, w: PartWeights, hardTo
 function warningFor(c: ScoredCandidate, weights: Weights): string | undefined {
   const n = c.details.mapGames;
   if (c.lowData) return n ? `Rarely picked here (${n} games)` : "Not picked on this map yet";
-  const worst = c.details.threats[0];
-  if (worst && worst.low >= weights.reasonMinPoints * 2) return `Watch for ${worst.name}`;
+  // Likely enemy answers that clearly beat this pick.
+  const answers = c.details.threats.filter((t) => t.low >= weights.reasonMinPoints).map((t) => t.name);
+  if (answers.length) return `Likely answer${answers.length > 1 ? "s" : ""}: ${answers.join(", ")}`;
   return undefined;
 }
 

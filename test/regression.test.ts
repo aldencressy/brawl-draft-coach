@@ -29,12 +29,13 @@ function build(): EngineData {
   set(OLLIE, [0, 0], [0, 0]); // never played in this mode
   set(BIBI, rate(370, 0.6), rate(32, 0.5)); // good on other Heist maps, even here
   set(PIPER, rate(5000, 0.51), rate(1400, 0.5));
-  set(HARD_COUNTER, rate(1500, 0.5), rate(300, 0.5));
+  set(HARD_COUNTER, rate(1500, 0.55), rate(300, 0.55)); // a decent brawler in its own right
   for (const f of FILLERS) set(f, rate(1000, 0.5), rate(150, 0.5));
 
-  // Noisy but fair matchups: hundreds of games for Colt (popular), a handful for Ollie (rare).
+  // Fair matchups with realistic sampling noise (about ±3 points at 300 games): hundreds of games
+  // for Colt (popular), a handful for Ollie (rare).
   FILLERS.forEach((f, i) => {
-    const noise = 0.08 * Math.sin((i + 1) * 12.9898);
+    const noise = 0.03 * Math.sin((i + 1) * 12.9898);
     const colt = rate(300, 0.5 + noise);
     vs[key(COLT, f)] = COLT < f ? colt : [colt[0], colt[0] - colt[1]];
     vs[key(OLLIE, f)] = rate(4, 0.5);
@@ -87,13 +88,22 @@ describe("regression: rarely played brawlers on a long-range map", () => {
   });
 
   it("noisy matchups alone don't make a popular brawler look easy to counter", () => {
-    expect(get(COLT).parts.risk).toBeGreaterThan(-1);
+    expect(get(COLT).parts.later).toBeGreaterThan(-2);
   });
 
-  it("a real hard counter still shows up as risk", () => {
-    expect(get(PIPER).details.threats[0]!.id).toBe(HARD_COUNTER);
-    expect(get(PIPER).parts.risk).toBeLessThan(-3);
-    expect(get(PIPER).warning).toBe(`Watch for B${HARD_COUNTER}`);
+  it("a real hard counter that the enemy would pick shows up as a likely answer", () => {
+    // Pick 5: only the enemy's last pick is left. With the strong ranged picks banned, the hard
+    // counter is the enemy's best option once Piper is on the board.
+    const late = recommend(
+      { mapId: MAP, mySlot: 5, bans: [COLT, EIGHT_BIT], allies: [FILLERS[0]!, FILLERS[1]!], enemies: [FILLERS[2]!, FILLERS[3]!] },
+      data,
+      weights,
+      draftConfig,
+    );
+    const piper = late.candidates.find((c) => c.id === PIPER)!;
+    expect(piper.details.threats[0]!.id).toBe(HARD_COUNTER);
+    expect(piper.parts.later).toBeLessThan(-3);
+    expect(piper.warning).toBe(`Likely answer: B${HARD_COUNTER}`);
   });
 
   it("hands the map's meta to the AI layer, most picked first", () => {

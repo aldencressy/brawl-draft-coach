@@ -1,62 +1,53 @@
 {
-  "_help": "Scoring weights. All scores are in win-rate points (+1 = one percentage point better). See README > Scoring for what each part means.",
-
-  "byPick": {
-    "_help": "How much each part counts, by your overall pick slot (1-6). Early picks lean on map strength and being hard to counter; late picks lean on countering what's already picked.",
-    "1": { "map": 1.0, "counter": 0.0, "synergy": 0.0, "risk": 1.0, "role": 0.4, "comfort": 0.5 },
-    "2": { "map": 1.0, "counter": 1.0, "synergy": 0.4, "risk": 0.8, "role": 0.6, "comfort": 0.5 },
-    "3": { "map": 1.0, "counter": 1.0, "synergy": 0.6, "risk": 0.8, "role": 0.6, "comfort": 0.5 },
-    "4": { "map": 0.8, "counter": 1.2, "synergy": 0.8, "risk": 0.5, "role": 0.8, "comfort": 0.5 },
-    "5": { "map": 0.8, "counter": 1.2, "synergy": 0.8, "risk": 0.5, "role": 0.8, "comfort": 0.5 },
-    "6": { "map": 0.7, "counter": 1.5, "synergy": 0.9, "risk": 0.0, "role": 0.8, "comfort": 0.5 }
+  "_help": "Scoring settings. Every pick is judged by how your team does once the draft is complete: your pick's own effect (map strength, counters against enemies already picked, pairs with allies already picked) plus how the rest of the draft goes after it, played out pick by pick with each side taking its best option. All in win-rate points (+1 = one percentage point). See README > Scoring.",
+  "simulation": {
+    "_help": "Playing out the rest of the draft after your pick, so earlier picks account for what comes next. Each remaining pick goes to the side that owns it, which takes the brawler worth most to it: strength on the map plus how it pairs with its team and matches up against the other. Other players pick from brawlers actually played on this map (picked in at least minPickRate of its games). Your pick's pairs with your likely teammates count teammateWeight as much, since solo-queue teammates don't always pick what fits you.",
+    "minPickRate": 0.02,
+    "teammateWeight": 0.5
   },
-
+  "roleWeight": 0.6,
+  "comfortWeight": 0.5,
   "smoothing": {
-    "_help": "Bayesian smoothing strength, in games. Higher = trust thin data less. Each level is pulled toward the level above it: map -> mode -> all modes -> 50%; matchups and pairs -> what the two brawlers' own win rates predict. A draft is played as 2-3 games, so these are set high: 200 games is only ~80 independent drafts.",
+    "_help": "Bayesian smoothing strength for win rates, in games. Higher = trust thin data less. Each level is pulled toward the level above it: map -> mode -> all modes -> 50%. (Matchups and pairs don't use these: they're shrunk by empirical Bayes, fitted from all pairs in the data.)",
     "overall": 100,
     "mode": 150,
     "map": 200,
-    "pairOverall": 150,
-    "pairMode": 150,
     "personal": 50
   },
-
   "carryover": {
     "_help": "How much of a brawler's edge elsewhere is assumed to carry over before this map's own games say otherwise. 1 = all of it, 0 = none (start from 50%). A brawler that wins on close-range maps may lose on long-range ones, and rarely picked brawlers' win rates are inflated by specialists, so neither is trusted fully.",
     "mode": 0.6,
     "map": 0.4
   },
-
   "gamesPerDraft": 2.5,
-
   "uncertainty": {
     "_help": "How much to prefer proven picks over promising but unproven ones. The 'unproven' part subtracts this many standard errors of the map win rate, so a brawler with no games on the map loses ~3 points and one with 2,000 games loses ~1. 0 turns it off.",
     "z": 0.5
   },
-
-
-  "risk": {
-    "_help": "Counter risk: the enemy's best remaining counters to this brawler, weighted best first (weights), scaled by enemy picks left after yours (out of 3). Only brawlers the enemy might realistically pick count: picked in at least minPickRate of games on this map, with a map win rate of at least minMapWinRate. Each counter is measured cautiously (z standard errors below its estimate), because the worst of dozens of noisy matchups always looks bad by chance; 2 keeps noise out while real hard counters with hundreds of games still count.",
-    "weights": [0.6, 0.3, 0.1],
-    "z": 2,
-    "minPickRate": 0.02,
-    "minMapWinRate": 0.47
-  },
-
   "roles": {
     "_help": "Role fit, in win-rate fractions (0.01 = 1 point). fill: per role your team doesn't have yet (max 2). duplicate: per role it already has. answer: per role that answers a role on the enemy team.",
     "fill": 0.008,
     "duplicate": 0.01,
-    "ignoreForDuplicates": ["damage"],
+    "ignoreForDuplicates": [
+      "damage"
+    ],
     "answer": 0.01,
     "answers": {
-      "anti-tank": ["tank"],
-      "anti-thrower": ["thrower"],
-      "wall-breaker": ["thrower"],
-      "assassin": ["thrower", "marksman"]
+      "anti-tank": [
+        "tank"
+      ],
+      "anti-thrower": [
+        "thrower"
+      ],
+      "wall-breaker": [
+        "thrower"
+      ],
+      "assassin": [
+        "thrower",
+        "marksman"
+      ]
     }
   },
-
   "minPower": 11,
   "lowDataGames": 100,
   "reasonMinPoints": 1.0,

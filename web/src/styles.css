@@ -127,6 +127,8 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .cand .extra { color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
 .cand .warn { color: var(--warn); }
 .cand .onmap { color: var(--muted); font-variant-numeric: tabular-nums; }
+.cand .answers { color: var(--muted); font-size: 12px; }
+.cand .answers b { color: var(--bad); font-weight: 600; }
 .cand.first .name { color: var(--gold); }
 .parts { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .parts .p { color: var(--good); }

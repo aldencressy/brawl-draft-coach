@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { StatsModel, cautious } from "../src/engine/model.js";
 import { NO_WEIGHTING, type StatsData } from "../src/outputs/stats.js";
 
-const k = { overall: 100, mode: 150, map: 200, pairOverall: 150, pairMode: 150, personal: 50 };
+const k = { overall: 100, mode: 150, map: 200, personal: 50 };
 const cfg = (carryover = { mode: 0.6, map: 0.4 }) => ({ smoothing: k, carryover, gamesPerDraft: 2.5 });
 
 // Brawler 1 went 10-0, all on map 100. Every level of the stats contains those same 10 games.
@@ -22,8 +22,33 @@ describe("StatsModel", () => {
   });
 
   it("counts each game once across mode and overall matchups", () => {
+    // All 10 games are in this mode. Counted once, 10 straight wins are weak evidence and stay
+    // heavily shrunk; counted twice (mode and overall) they'd come out roughly twice as big.
     const expected = 0.5 + (model.modeRate(1) - 0.5) - (model.modeRate(2) - 0.5);
-    expect(model.vs(1, 2).value).toBeCloseTo((10 + 150 * expected) / (10 + 150) - expected);
+    const raw = 1 - expected;
+    const edge = model.vs(1, 2);
+    expect(edge.value).toBeGreaterThan(0);
+    expect(edge.value).toBeLessThan(raw * 0.1);
+  });
+
+  it("keeps most of a big effect that has lots of evidence, and shrinks one that doesn't", () => {
+    const big: StatsData = {
+      ...stats,
+      modes: { gemGrab: { games: 1, brawlers: {}, vs: {}, with: {} } },
+      overall: {
+        games: 1, brawlers: {}, with: {},
+        // Background pairs give a realistic spread (about ±2 points); 1-2 is a +12 point counter
+        // over 2,000 games, 3-4 the same +12 points over 40 games.
+        vs: {
+          ...Object.fromEntries(Array.from({ length: 300 }, (_, i) => [`${100 + i}-${500 + i}`, [300 + (i % 7) * 200, Math.round((300 + (i % 7) * 200) * (0.5 + 0.035 * Math.sin(i)))]])),
+          "1-2": [2000, 1240],
+          "3-4": [40, 25],
+        },
+      },
+    };
+    const model = new StatsModel(big, "gemGrab", 100, cfg());
+    expect(model.vs(1, 2).value).toBeGreaterThan(0.06); // keeps over half
+    expect(model.vs(3, 4).value).toBeLessThan(0.02);
   });
 
   it("matchups are antisymmetric", () => {

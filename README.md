@@ -168,6 +168,8 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 
 - **Gadget** and **Star power**: all of its options, with the recommended one in gold and a close
   second dashed. Hover an item for its description.
+- **Likely answers** (early picks): the enemy's likely answers that do well against it, from
+  playing out the rest of the draft, with how many points each costs you.
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.
 - Items you don't own are struck through, with a note if the recommended build needs one.
 
@@ -228,46 +230,51 @@ given the map, your pick slot, bans, ally picks and enemy picks, it scores every
 at `minPower` or above (default 11) that's still available. Scores are in **win-rate points**
 (+1 = one percentage point).
 
+**Every pick is judged the same way: by its own part in the completed 3v3.** That's its strength
+on the map plus its pair effect with every enemy and every teammate on the final board. For a
+last pick the board is known. For earlier picks the rest of the draft is played out: each
+remaining pick, in draft order, goes to the side that owns it, which takes the brawler worth most
+to it (strength plus pairs with its team and matchups against the other), from brawlers actually
+played on the map. A strong brawler that's easy to answer therefore scores lower as a first pick
+than as a last pick, because the enemy gets to answer it.
+
 | Part | What it measures |
 |---|---|
-| `map` | Smoothed win rate on this map, minus 50% |
-| `counter` | Average edge against each enemy already picked |
-| `synergy` | Average edge with each ally already picked |
-| `risk` | How hard the enemy's best remaining counters beat it, scaled by enemy picks left after yours |
-| `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles` in weights) |
-| `comfort` | How much better you do on it than everyone else (from your own ranked games) |
+| `map` | Strength on this map, with matchup and team luck removed (see below) |
+| `counter` | Matchups against the enemies already picked (summed) |
+| `synergy` | Pairs with the allies already picked (summed) |
+| `later` | Matchups against the enemy's likely answers and pairs with your likely teammates, from playing out the rest of the draft (0 at the last pick) |
+| `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles`, × `roleWeight`) |
+| `comfort` | How much better you do on it than everyone else, from your own ranked games (× `comfortWeight`) |
 | `unproven` | A cost for having few games on this map: the less evidence, the bigger it is |
-
-The first six are multiplied by their weight for your pick slot (`byPick` in `config/weights.json`);
-`unproven` is the same at every slot (`uncertainty.z`). Early picks lean on map strength and low
-risk; the last pick leans on counters.
 
 **Smoothing.** Win rates are smoothed with `(wins + k × prior) / (games + k)`. A map rate's prior
 is the brawler's rate on the mode's *other* maps; that one's prior is its rate in *other* modes;
-then 50%. Using only outside games means no game counts twice. `k` values are in `smoothing`;
-they're high because one draft is played as 2–3 games (`gamesPerDraft`).
+then 50%. Using only outside games means no game counts twice. `k` values are in `smoothing`.
 
 **Carry-over.** Only part of a brawler's edge elsewhere carries over to this map (`carryover`):
 a close-range brawler that wins on Safe Zone can lose on Bridge Too Far, and rarely picked
-brawlers' win rates are inflated by specialists. A brawler's rate on *this* map has to come
-mostly from games on this map.
+brawlers' win rates are inflated by specialists.
 
-**Edges, not raw win rates.** A strong brawler beats most enemies, so a matchup only counts as a
-counter if it beats what the two brawlers' own win rates predict. Each mode's games are compared
-with that mode's expectation, and only the effect carries over between modes.
+**Matchups and pairs** are measured against expectation (a strong brawler beats most enemies, so a
+matchup only counts as a counter if it beats what the two brawlers' own win rates predict), per
+mode, with only the effect carrying over between modes. They're shrunk by **empirical Bayes**: from
+all pairs in the data the engine fits how much real effects vary (about ±2.2 points) and how noisy
+one game is, then shrinks each pair toward 0 by exactly as much as its sample size calls for.
+Real data's pair effects are bell-shaped (checked: kurtosis ~3.0), which is what this assumes.
 
-**Noise.** Counter risk takes the worst of dozens of matchups, and the worst of many noisy numbers
-always looks bad by chance, which would punish exactly the brawlers with the most data. So risk
-uses each counter's cautious edge (`risk.z` standard errors below its estimate), and only from
-brawlers the enemy might realistically pick on this map (`risk.minPickRate`, `risk.minMapWinRate`).
-"Counters X" and "Pairs with X" tags also require the edge to hold up after allowing for noise.
+**Luck.** A brawler's win rate includes the matchups and teammates it happened to get. Brawlers
+picked when it's safe (late, into no counters) enjoy good matchups; popular blind picks get
+countered. `map` uses strength with that luck removed, so matchups are only counted once: from
+the actual board, or from the predicted rest of the draft. For each enemy pick still to come,
+`later` counts whichever is worse for you: the simulated answer, or the matchup the brawler really
+gets per enemy in its games (real players counter popular blind picks harder than the simulation).
 
 **Output** (`Recommendation` in `src/engine/types.ts`) is plain JSON: the draft context, data
 freshness, the map's most-picked brawlers (`data.mapMeta`), and the top `handOffTop` candidates,
-each with its score, the parts, up to three reason tags, a warning (rarely picked here, or a
-dangerous counter), the build from `builds.json`, and the details behind each part. The UI shows
-the first `showTop`, each with its win rate, games and pick rate on the map; the AI layer gets all
-of them.
+each with its score, the parts, up to three reason tags, a warning (rarely picked here, or likely
+enemy answers that clearly beat it), the build, the predicted enemy answers and teammates, and the
+details behind each part. The UI shows the first `showTop`; the AI layer gets all of them.
 
 **Draft order** is in `config/draft.json`: which team makes each of the six picks.
 

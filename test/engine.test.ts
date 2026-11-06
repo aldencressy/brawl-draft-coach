@@ -50,9 +50,10 @@ describe("recommend: sample drafts", () => {
   it("first pick: a strong but easily countered brawler is held back, and warned about", () => {
     const early = run({ mySlot: 1 });
     const fragile = early.candidates.find((c) => c.id === B.Fragile)!;
-    expect(fragile.parts.risk).toBeLessThan(-1.5);
-    expect(fragile.warning).toBe("Watch for Bully");
+    // Picked first, the enemy answers it with Bully.
     expect(fragile.details.threats[0]!.id).toBe(B.Bully);
+    expect(fragile.parts.later).toBeLessThan(-1.5);
+    expect(fragile.warning).toMatch(/^Likely answers?: .*Bully/);
     // Picked last there's no risk, so it ranks higher than it did first.
     const late = run({ mySlot: 6, allies: [B.Filler1, B.Tank], enemies: [B.Filler2, B.Unowned, B.Prey] });
     expect(rankOf(late, B.Fragile)).toBeLessThan(rankOf(early, B.Fragile));
@@ -65,7 +66,7 @@ describe("recommend: sample drafts", () => {
     const prey = top(rec).details.counters.find((c) => c.id === B.Prey)!;
     // Planted at +15. In a 12-brawler world Hunter meets Prey in a quarter of its games, so part
     // of the effect shows up in their own win rates instead; with ~110 brawlers that leak is small.
-    expect(prey.points).toBeGreaterThan(5);
+    expect(prey.points).toBeGreaterThan(4);
   });
 
   it("pick 4 with TwinA on the team: TwinB comes first, paired with TwinA", () => {
@@ -108,14 +109,24 @@ describe("recommend: summary tags", () => {
   });
 });
 
-describe("recommend: tags match the score", () => {
-  it("never claims counters or pairs at a slot whose score ignores them", () => {
-    // Pick 1 weights counters and synergy at 0, so even with a full board these can't be reasons.
-    const rec = run({ mySlot: 1, allies: [B.TwinA, B.Tank], enemies: [B.Prey, B.Bully, B.Filler2] }, { ...weights, handOffTop: 20 });
+describe("recommend: one measure at every slot", () => {
+  it("a last pick's score is its own effect on the real 3v3", () => {
+    const rec = run({ mySlot: 6, allies: [B.TwinA, B.Tank], enemies: [B.Prey, B.Bully, B.Filler2] }, { ...weights, handOffTop: 20 });
     for (const c of rec.candidates) {
-      expect(c.reasons.some((r) => r.startsWith("Counters") || r.startsWith("Pairs with"))).toBe(false);
-      expect(c.parts.counter).toBe(0);
-      expect(c.parts.synergy).toBe(0);
+      expect(c.parts.later).toBe(0); // nothing left to predict
+      const counters = c.details.counters.reduce((t, x) => t + x.points, 0);
+      const pairs = c.details.synergies.reduce((t, x) => t + x.points, 0);
+      expect(c.parts.counter).toBeCloseTo(counters, 0);
+      expect(c.parts.synergy).toBeCloseTo(pairs, 0);
+    }
+  });
+
+  it("earlier picks include the enemy's likely answers and your likely teammates", () => {
+    const rec = run({ mySlot: 1 });
+    for (const c of rec.candidates) {
+      expect(c.details.threats).toHaveLength(3);
+      expect(c.details.likelyTeammates).toHaveLength(2);
+      expect(c.details.threats.map((t) => t.id)).not.toContain(c.id);
     }
   });
 });

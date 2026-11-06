@@ -12,6 +12,11 @@
 // "A beats B 55% of the time" only means A counters B if A's own win rate predicts less than 55%.
 // Each mode's games are compared with that mode's expectation, and only the *effect* (how much
 // better than expected) carries over from other modes, since brawlers' strength differs by mode.
+//
+// Pair effects use empirical Bayes: from all pairs in the data we fit how much real effects vary
+// and how noisy one game is, then shrink each pair's observed effect toward 0 by exactly as much
+// as its sample size calls for. Real counters with enough games keep most of their size; a
+// handful of lucky games shrinks to almost nothing.
 import type { Record2 } from "../collector/aggregate.js";
 import type { PairStats, StatsData } from "../outputs/stats.js";
 import type { Weights } from "./types.js";
@@ -26,6 +31,71 @@ const carry = (rate: number, share: number) => 0.5 + share * (rate - 0.5);
 
 /** Below this many games on the map, pick rates come from the whole mode instead. */
 const MIN_MAP_GAMES_FOR_PICK_RATE = 200;
+/** Pairs with at least this many games help estimate pair effects' spread and noise. */
+const MIN_GAMES_FOR_SPREAD = 30;
+/** Floors, so effects are never shrunk to exactly 0 and noise is never below a fair coin's. */
+const MIN_SPREAD = 0.005;
+const MIN_NOISE_PER_GAME = 0.25;
+/** Noise per game when the data can't separate noise from spread (measured ~0.27-0.30 on real data). */
+const DEFAULT_NOISE_PER_GAME = 0.3;
+
+/** How much real pair effects vary (`spread`, a variance) and the noise of one game (`perGame`). */
+interface PairFit {
+  spread: number;
+  perGame: number;
+}
+
+const fitCache = new WeakMap<StatsData, { vs: PairFit; with: PairFit }>();
+const luckCache = new WeakMap<StatsData, Map<string, Map<number, Luck>>>();
+
+/** Average pair effects a brawler had in its real games: per enemy faced and per teammate had. */
+export interface Luck {
+  perEnemy: number;
+  perTeammate: number;
+}
+
+/**
+ * Fitted once per stats file. Across all pairs, the observed effect's variance is
+ * spread + perGame / games: pairs with few games vary mostly from noise, pairs with many games
+ * mostly from real effects. A weighted line through games-binned pairs gives both numbers.
+ */
+function fitPairs(stats: StatsData, overallK: number): { vs: PairFit; with: PairFit } {
+  const cached = fitCache.get(stats);
+  if (cached) return cached;
+  const rate = (id: number) => smooth(stats.overall.brawlers[id] ?? NONE, overallK, 0.5);
+  const fit = (table: Record<string, Record2>, sign: 1 | -1): PairFit => {
+    const bins = [30, 60, 120, 250, 500, 1000, 2000].map((lo) => ({ lo, n: 0, sq: 0, inv: 0 }));
+    for (const [key, [games, wins]] of Object.entries(table)) {
+      if (games < MIN_GAMES_FOR_SPREAD) continue;
+      const bin = [...bins].reverse().find((b) => games >= b.lo)!;
+      const [a, b] = key.split("-").map(Number) as [number, number]; // wins are for a, the lower id
+      const expected = clamp(0.5 + (rate(a) - 0.5) + sign * (rate(b) - 0.5));
+      bin.sq += (wins / games - expected) ** 2;
+      bin.inv += 1 / games;
+      bin.n++;
+    }
+    let w = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (const b of bins.filter((b) => b.n >= Math.min(20, 1 + Object.keys(table).length / 10))) {
+      const x = b.inv / b.n;
+      const y = b.sq / b.n;
+      w += b.n;
+      sx += b.n * x;
+      sy += b.n * y;
+      sxx += b.n * x * x;
+      sxy += b.n * x * y;
+    }
+    if (w === 0) return { spread: MIN_SPREAD ** 2, perGame: DEFAULT_NOISE_PER_GAME };
+    // With pairs of only one size, the line can't be fitted: assume the usual noise, fit the spread.
+    const denominator = w * sxx - sx * sx;
+    const fitted = denominator > 1e-12 * w * w ? (w * sxy - sx * sy) / denominator : DEFAULT_NOISE_PER_GAME;
+    const perGame = Math.max(MIN_NOISE_PER_GAME, fitted);
+    const spread = Math.max(MIN_SPREAD ** 2, (sy - perGame * sx) / w);
+    return { spread, perGame };
+  };
+  const result = { vs: fit(stats.overall.vs, -1), with: fit(stats.overall.with, 1) };
+  fitCache.set(stats, result);
+  return result;
+}
 
 export interface Edge {
   /** Advantage over expectation, as a win-probability difference (0.02 = 2 points). */
@@ -45,12 +115,13 @@ export class StatsModel {
   private readonly mode: PairStats | undefined;
   private readonly mapRecords: Record<string, Record2>;
   private readonly cache = new Map<string, number>();
+  private readonly pairCache = new Map<string, Edge>();
   private readonly k: Weights["smoothing"];
   readonly mapGames: number;
 
   constructor(
     private readonly stats: StatsData,
-    modeKey: string,
+    private readonly modeKey: string,
     mapId: number,
     private readonly weights: Pick<Weights, "smoothing" | "carryover" | "gamesPerDraft">,
   ) {
@@ -103,6 +174,55 @@ export class StatsModel {
     });
   }
 
+  /**
+   * The matchups and teammates a brawler actually got, on average, in its games in this mode: its
+   * pair effect per enemy faced and per teammate had. Brawlers picked when it's safe (late, into
+   * no counters) have positive matchup luck that inflates their win rate; popular blind picks
+   * that get countered a lot have negative luck.
+   */
+  luck(id: number): Luck {
+    let byMode = luckCache.get(this.stats);
+    if (!byMode) luckCache.set(this.stats, (byMode = new Map()));
+    let luck = byMode.get(this.modeKey);
+    if (!luck) {
+      const vs = new Map<number, number>();
+      const team = new Map<number, number>();
+      const add = (sums: Map<number, number>, b: number, amount: number) => sums.set(b, (sums.get(b) ?? 0) + amount);
+      for (const [key, [games]] of Object.entries(this.mode?.vs ?? {})) {
+        const [a, b] = key.split("-").map(Number) as [number, number];
+        add(vs, a, games * this.vs(a, b).value);
+        add(vs, b, games * this.vs(b, a).value);
+      }
+      for (const [key, [games]] of Object.entries(this.mode?.with ?? {})) {
+        const [a, b] = key.split("-").map(Number) as [number, number];
+        const v = this.with(a, b).value;
+        add(team, a, games * v);
+        add(team, b, games * v);
+      }
+      // A brawler faces 3 enemies and has 2 teammates per game.
+      const ids = new Set([...vs.keys(), ...team.keys()]);
+      luck = new Map(
+        [...ids].map((b) => {
+          const games = Math.max(1, this.modeRecord(b)[0]);
+          return [b, { perEnemy: (vs.get(b) ?? 0) / (3 * games), perTeammate: (team.get(b) ?? 0) / (2 * games) }];
+        }),
+      );
+      byMode.set(this.modeKey, luck);
+    }
+    return luck.get(id) ?? { perEnemy: 0, perTeammate: 0 };
+  }
+
+  /**
+   * Strength on this map with that luck removed: what the brawler is worth before matchups and
+   * teammates, which are counted separately (for the picks known now and the ones predicted).
+   */
+  strength(id: number): number {
+    return this.memo(`s${id}`, () => {
+      const { perEnemy, perTeammate } = this.luck(id);
+      return this.mapRate(id) - 3 * perEnemy - 2 * perTeammate;
+    });
+  }
+
   /** Standard error of the map win rate: large with few games here, small with many. */
   mapRateError(id: number): number {
     return Math.sqrt((0.25 * this.weights.gamesPerDraft) / (this.mapRecord(id)[0] + this.k.map));
@@ -114,40 +234,60 @@ export class StatsModel {
     return this.mode?.games ? this.modeRecord(id)[0] / this.mode.games : 0;
   }
 
-  /**
-   * Standard error of a pair edge. One draft is played as 2-3 games, so games are not independent;
-   * `gamesPerDraft` scales the count down to roughly independent samples.
-   */
-  private pairError(games: number): number {
-    return Math.sqrt((0.25 * this.weights.gamesPerDraft) / (games + this.k.pairOverall));
-  }
-
-  private edge(rate: number, expected: number, games: number): Edge {
-    return { value: rate - expected, err: this.pairError(games), games };
-  }
-
   /** How much better `a` does against `b` than their win rates predict. Positive = a counters b. */
   vs(a: number, b: number): Edge {
-    const sign = -1; // b is on the other team
-    return this.pairEdge(orientedVs(this.stats.overall.vs, a, b), orientedVs(this.mode?.vs, a, b), a, b, sign);
+    const key = `v${a},${b}`;
+    let edge = this.pairCache.get(key);
+    if (!edge) {
+      const sign = -1; // b is on the other team
+      edge = this.pairEdge(orientedVs(this.stats.overall.vs, a, b), orientedVs(this.mode?.vs, a, b), a, b, sign, "vs");
+      this.pairCache.set(key, edge);
+    }
+    return edge;
   }
 
   /** How much better `a` and `b` do together than their win rates predict. */
   with(a: number, b: number): Edge {
     const key = pairKey(a, b);
-    return this.pairEdge(this.stats.overall.with[key] ?? NONE, this.mode?.with[key] ?? NONE, a, b, 1);
+    let edge = this.pairCache.get(key);
+    if (!edge) {
+      edge = this.pairEdge(this.stats.overall.with[key] ?? NONE, this.mode?.with[key] ?? NONE, a, b, 1, "with");
+      this.pairCache.set(key, edge);
+    }
+    return edge;
   }
 
   /**
-   * The pair's effect in other modes (against other modes' expectation) is the starting point
-   * for its effect in this mode (against this mode's expectation).
+   * Combines the pair's observed effect in this mode and in other modes (each against its own
+   * expectation; other modes' games count `carryover.mode` as much) with the prior that real
+   * effects are spread around 0 with the variance estimated from all pairs.
    */
-  private pairEdge(overall: Record2, inMode: Record2, a: number, b: number, sign: 1 | -1): Edge {
+  private pairEdge(overall: Record2, inMode: Record2, a: number, b: number, sign: 1 | -1, kind: "vs" | "with"): Edge {
     const expectedElsewhere = clamp(0.5 + (this.otherModesRate(a) - 0.5) + sign * (this.otherModesRate(b) - 0.5));
     const expectedHere = clamp(0.5 + (this.modeRate(a) - 0.5) + sign * (this.modeRate(b) - 0.5));
-    const effectElsewhere = smooth(minus(overall, inMode), this.k.pairOverall, expectedElsewhere) - expectedElsewhere;
-    const rate = smooth(inMode, this.k.pairMode, clamp(expectedHere + effectElsewhere));
-    return this.edge(rate, expectedHere, overall[0]);
+    const elsewhere = minus(overall, inMode);
+    const { spread, perGame } = fitPairs(this.stats, this.k.overall)[kind];
+    // The evidence: a precision-weighted average of the effect here and elsewhere.
+    const evidenceElsewhere = (this.weights.carryover.mode * elsewhere[0]) / perGame;
+    const evidenceHere = inMode[0] / perGame;
+    const evidence = evidenceElsewhere + evidenceHere;
+    if (evidence === 0) return { value: 0, err: Math.sqrt(spread), games: overall[0] };
+    const effectElsewhere = elsewhere[0] ? elsewhere[1] / elsewhere[0] - expectedElsewhere : 0;
+    const effectHere = inMode[0] ? inMode[1] / inMode[0] - expectedHere : 0;
+    const observed = (evidenceElsewhere * effectElsewhere + evidenceHere * effectHere) / evidence;
+    // Bell-curve prior around 0 with the fitted spread (real data's pair effects are bell-shaped:
+    // kurtosis ~3.0): shrink by spread / (spread + noise).
+    const precision = 1 / spread + evidence;
+    return { value: (evidence * observed) / precision, err: Math.sqrt(1 / precision), games: overall[0] };
+  }
+
+  /** The fitted pair model, for reports: real-effect spread (standard deviation) and noise per game. */
+  pairFit(): { vs: { spread: number; perGame: number }; with: { spread: number; perGame: number } } {
+    const f = fitPairs(this.stats, this.k.overall);
+    return {
+      vs: { spread: Math.sqrt(f.vs.spread), perGame: f.vs.perGame },
+      with: { spread: Math.sqrt(f.with.spread), perGame: f.with.perGame },
+    };
   }
 
   /** Your smoothed win rate on a brawler minus its overall rate. Positive = you do better than average. */

@@ -31,8 +31,16 @@ export const OTHER_GEM_MAP = 200;
 export const BOUNTY_MAP = 300;
 const NAMES = Object.fromEntries(Object.entries(B).map(([name, id]) => [id, name]));
 
+// Like real data, every pair has a small effect of its own (about ±2 points, as measured on real
+// data), with the planted effects below standing out from that background.
+const background = (a: number, b: number) => 0.04 * Math.sin(Math.min(a, b) * 12.9898 + Math.max(a, b) * 78.233);
+
 function effect(team: number[], enemy: number[], mapId: number): number {
   let e = 0;
+  for (const a of team) {
+    for (const b of enemy) e += (a < b ? 1 : -1) * background(a, b) / 2; // halved: both sides add it
+    for (const b of team) if (a < b) e += background(a + 100, b + 100) / 2;
+  }
   for (const id of team) {
     if (id === B.Mapper && mapId === GEM_FORT) e += 0.08;
     if (id === B.Fragile && mapId === GEM_FORT) e += 0.05;

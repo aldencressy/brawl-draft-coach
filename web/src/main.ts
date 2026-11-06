@@ -455,11 +455,19 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean): string {
     <div class="why">${x.reasons.map((r) => `<span>${esc(r)}</span>`).join("") || `<span class="fresh">No standout reason</span>`}</div>
     <div class="extra">
       <span class="onmap">${onMap}</span>
+      ${answersHtml(x)}
       ${x.warning ? `<span class="warn">⚠ ${esc(x.warning)}</span>` : ""}
       ${kitHtml(x.id)}
       <span class="parts">${parts}</span>
     </div>
   </div>`;
+}
+
+/** For early picks: the enemy's likely answers that do well against this pick (from playing out the draft). */
+function answersHtml(x: ScoredCandidate): string {
+  const bad = x.details.threats.filter((t) => t.points > 0).slice(0, 3);
+  if (!bad.length) return "";
+  return `<span class="answers">Likely answers: ${bad.map((t) => `${esc(t.name)} <b>+${t.points}</b>`).join(", ")}</span>`;
 }
 
 /**

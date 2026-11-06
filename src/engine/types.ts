@@ -5,19 +5,20 @@ import type { StaticData } from "../outputs/static.js";
 import type { StatsData } from "../outputs/stats.js";
 
 export type Team = "first" | "second";
-/** Parts weighted by pick slot (`byPick`). */
-export type WeightedPart = "map" | "counter" | "synergy" | "risk" | "role" | "comfort";
-/** Every part of a score; `unproven` is the same at every slot (`uncertainty`). */
-export type Part = WeightedPart | "unproven";
-export type PartWeights = Record<WeightedPart, number>;
+/**
+ * The parts of a score, in win-rate points. map, counter and synergy are your pick's own effect on
+ * the 3v3; later is how the rest of the draft goes after it; role, comfort and unproven adjust.
+ */
+export type Part = "map" | "counter" | "synergy" | "later" | "role" | "comfort" | "unproven";
 
 export interface Weights {
-  byPick: Record<string, PartWeights>;
-  smoothing: { overall: number; mode: number; map: number; pairOverall: number; pairMode: number; personal: number };
+  smoothing: { overall: number; mode: number; map: number; personal: number };
   carryover: { mode: number; map: number };
   gamesPerDraft: number;
   uncertainty: { z: number };
-  risk: { weights: number[]; z: number; minPickRate: number; minMapWinRate: number };
+  simulation: { minPickRate: number; teammateWeight: number };
+  roleWeight: number;
+  comfortWeight: number;
   roles: {
     fill: number;
     duplicate: number;
@@ -91,7 +92,10 @@ export interface ScoredCandidate {
     usedModeFallback: boolean;
     counters: PairDetail[];
     synergies: PairDetail[];
+    /** The enemy's likely answers to this pick (from playing out the draft), worst for you first. */
     threats: PairDetail[];
+    /** Your teammates' likely picks after this one. */
+    likelyTeammates: Array<{ id: number; name: string }>;
     rolesFilled: string[];
     rolesDuplicated: string[];
     /** Enemy roles this brawler answers (see weights.roles.answers). */
@@ -112,7 +116,6 @@ export interface Recommendation {
     allies: Array<{ id: number; name: string }>;
     enemies: Array<{ id: number; name: string }>;
     bans: Array<{ id: number; name: string }>;
-    weights: PartWeights;
   };
   data: {
     games: number;
