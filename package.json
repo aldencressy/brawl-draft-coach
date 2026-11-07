@@ -17,6 +17,7 @@
     "outputs": "tsx scripts/outputs.ts",
     "checklist": "tsx scripts/checklist.ts",
     "suggest": "tsx scripts/suggest.ts",
+    "backtest": "tsx scripts/backtest.ts",
     "dev": "vite",
     "build:web": "vite build && mkdir -p dist/data && cp ${DATA_DIR:-data}/out/*.json dist/data/",
     "preview": "vite preview",

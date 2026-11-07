@@ -17,6 +17,8 @@ export interface Weights {
   gamesPerDraft: number;
   uncertainty: { z: number };
   simulation: { minPickRate: number; teammateWeight: number; answerFocus: number };
+  /** How much teammate pair effects count (see weights.json). */
+  synergyWeight: number;
   roleWeight: number;
   comfortWeight: number;
   roles: {

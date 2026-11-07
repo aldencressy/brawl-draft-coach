@@ -6,6 +6,8 @@
     "teammateWeight": 0.5,
     "answerFocus": 100
   },
+  "synergyWeight": 0.5,
+  "_synergyWeight": "How much teammate pairs count: pairs with allies already picked, with your likely teammates, and in the other players' predicted picks. Set by the backtest (npm run backtest): on Nov 6 and Nov 7 games, the weight that predicted results best was 0.33 and 0.51, and 0.5 beat 1 on both days. Map strength and matchups fitted at about 1, so they have no weight of their own.",
   "roleWeight": 0.6,
   "comfortWeight": 0.5,
   "smoothing": {

@@ -71,7 +71,9 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     const counters = draft.enemies.map((e) => ({ id: e, name: nameOf(e), ...model.vs(id, e) }));
     const synergies = draft.allies.map((a) => ({ id: a, name: nameOf(a), ...model.with(id, a) }));
     const counter = counters.reduce((t, c) => t + c.value, 0);
-    const synergy = synergies.reduce((t, s) => t + s.value, 0);
+    // Pair effects count `synergyWeight` as much: measured against real results, full weight overstates them.
+    const pairWeight = weights.synergyWeight;
+    const synergy = pairWeight * synergies.reduce((t, s) => t + s.value, 0);
 
     // The rest of the draft, played out after this pick: the enemy's likely answers and your
     // teammates' likely picks, and how your pick does against and with them. Each enemy pick still
@@ -79,7 +81,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     // whichever is worse for you: your expected matchup against that spread, or the matchup this
     // brawler really gets per enemy in its games. Real players counter popular blind picks harder
     // than the simulation does, and that history is the best evidence of it.
-    const rest = playOut(model, [...draft.allies, id], [...draft.enemies], later, pool.filter((p) => p !== id), choice);
+    const rest = playOut(model, [...draft.allies, id], [...draft.enemies], later, pool.filter((p) => p !== id), choice, pairWeight);
     // The enemy's likeliest picks across all their picks still to come, as many as they have left.
     const chance = new Map<number, number>();
     for (const odds of rest.enemyOdds) for (const [e, p] of odds) chance.set(e, (chance.get(e) ?? 0) + p);
@@ -91,7 +93,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     const expected = rest.enemyOdds.map((odds) => odds.reduce((t, [e, p]) => t + p * model.vs(id, e).value, 0));
     const laterValue =
       expected.reduce((t, x) => t + Math.min(x, realMatchup), 0) +
-      weights.simulation.teammateWeight * rest.allies.reduce((t, a) => t + model.with(id, a).value, 0);
+      weights.simulation.teammateWeight * pairWeight * rest.allies.reduce((t, a) => t + model.with(id, a).value, 0);
 
     // Role fit
     const ro = weights.roles;
@@ -204,9 +206,9 @@ export function remainingPicks(order: DraftConfig["order"], myTeam: Team, draft:
 }
 
 /** What adding `b` is worth to its side: its strength here plus its pair effects with the board. */
-function pickValue(model: StatsModel, b: number, own: number[], other: number[]): number {
+function pickValue(model: StatsModel, b: number, own: number[], other: number[], pairWeight: number): number {
   let v = model.strength(b) - 0.5;
-  for (const a of own) v += model.with(b, a).value;
+  for (const a of own) v += pairWeight * model.with(b, a).value;
   for (const o of other) v += model.vs(b, o).value;
   return v;
 }
@@ -231,6 +233,8 @@ export function playOut(
   picks: Array<"ally" | "enemy">,
   pool: number[],
   choice?: Choice,
+  /** How much teammate pairs count (`weights.synergyWeight`). */
+  pairWeight = 1,
 ): { allies: number[]; enemies: number[]; enemyOdds: Array<Array<[number, number]>> } {
   const ours = [...allies];
   const theirs = [...enemies];
@@ -244,7 +248,7 @@ export function playOut(
     const options: Array<[number, number]> = [];
     for (const b of pool) {
       if (used.has(b)) continue;
-      const v = pickValue(model, b, own, other);
+      const v = pickValue(model, b, own, other, pairWeight);
       if (v > bestValue) [best, bestValue] = [b, v];
       // How much it suits this board, beyond its strength on the map (which its pick rate already shows).
       if (choice && side === "enemy") options.push([b, v - (model.strength(b) - 0.5)]);
@@ -290,7 +294,10 @@ function reasonsFor(c: ScoredCandidate, weights: Weights, enemyStillToPick: bool
   if (c.parts.map >= min && !c.lowData) tags.push({ text: `Strong on map (${pct}%)`, points: c.parts.map });
   // Only name matchups that hold up after allowing for noise.
   for (const x of c.details.counters) if (x.points >= min && x.low > 0) tags.push({ text: `Counters ${x.name}`, points: x.points });
-  for (const x of c.details.synergies) if (x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: x.points });
+  const pairWeight = weights.synergyWeight;
+  for (const x of c.details.synergies) {
+    if (pairWeight * x.points >= min && x.low > 0) tags.push({ text: `Pairs with ${x.name}`, points: pairWeight * x.points });
+  }
   // Small edges against (or with) everyone can add up even when no single one stands out.
   const named = (prefix: string) => tags.some((t) => t.text.startsWith(prefix));
   if (c.parts.counter >= min && !named("Counters")) tags.push({ text: "Good into their picks", points: c.parts.counter });

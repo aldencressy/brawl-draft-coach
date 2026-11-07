@@ -267,7 +267,7 @@ risk averages out; 100 keeps it about where it was before the meta weighting.
 |---|---|
 | `map` | Strength on this map, with matchup and team luck removed (see below) |
 | `counter` | Matchups against the enemies already picked (summed) |
-| `synergy` | Pairs with the allies already picked (summed) |
+| `synergy` | Pairs with the allies already picked (summed, × `synergyWeight`) |
 | `later` | Matchups against the enemy's likely picks (a spread that follows the meta, see above) and pairs with your likely teammates, from playing out the rest of the draft (0 at the last pick) |
 | `role` | Fills a role your team lacks, duplicates one it has, or answers an enemy role (`roles`, × `roleWeight`) |
 | `comfort` | How much better you do on it than everyone else, from your own ranked games (× `comfortWeight`) |
@@ -320,7 +320,30 @@ Checks worth running after changing weights:
 ```bash
 npm run suggest -- --all --slot 1                     # top 5 on every current map; * marks thin data
 npm run suggest -- --calibration --map "bridge too far"  # average edges; should all be near 0
+npm run backtest                                      # how well it predicts real results (below)
 ```
+
+### Backtest
+
+`npm run backtest` checks the engine against real results. For each day with a game sample
+(`games/<date>.json`), it builds the stats from the days *before* it, so the engine has never seen
+the games it predicts, then scores every sampled game the way the engine scores a 3v3: map
+strength, matchups against the other team and teammate pairs. It reports:
+
+- how often the favored team won, and the log loss (lower is better; a coin flip is 0.693)
+- variants (counters ×0.5 or ×1.5, pairs ×0.5 or ×2, no counters, map strength with luck left
+  in) and whether each predicts clearly better or worse than the engine
+- the best-fitting weight for map strength, counters and pairs (1 = the engine's weight now)
+
+Run it after changing `weights.json` or the model, and keep a change only if it predicts better.
+`--day 2026-11-07` tests one day. It reads `DATA_DIR` like `suggest` does.
+
+What it has found so far (Nov 6 and 7, 40,000 games each): the engine picks the winner about 58%
+of the time from the draft alone. Map strength and counters are weighted right (best fits about
+1.0 and 1.1–1.2); counting counters half or 1.5× as much predicts worse. Teammate pairs were
+counted about twice as much as they deserve, hence `synergyWeight: 0.5`. Removing matchup luck
+from map strength predicts better than leaving it in. Role fit and your own record aren't in the
+backtest, since game results can't measure them.
 
 ## Without a key: mock server
 

@@ -74,7 +74,9 @@ describe("recommend: sample drafts", () => {
   });
 
   it("pick 4 with TwinA on the team: TwinB comes first, paired with TwinA", () => {
-    const rec = run({ mySlot: 4, allies: [B.TwinA], enemies: [B.Filler1, B.Filler2] });
+    // Pairs at full weight: this world plants a big pair effect, and the test is that the engine finds
+    // it. (On real data pairs count half, see synergyWeight.)
+    const rec = run({ mySlot: 4, allies: [B.TwinA], enemies: [B.Filler1, B.Filler2] }, { ...weights, synergyWeight: 1 });
     expect(top(rec).id).toBe(B.TwinB);
     expect(top(rec).reasons).toContain("Pairs with TwinA");
   });
@@ -121,7 +123,7 @@ describe("recommend: one measure at every slot", () => {
       const counters = c.details.counters.reduce((t, x) => t + x.points, 0);
       const pairs = c.details.synergies.reduce((t, x) => t + x.points, 0);
       expect(c.parts.counter).toBeCloseTo(counters, 0);
-      expect(c.parts.synergy).toBeCloseTo(pairs, 0);
+      expect(c.parts.synergy).toBeCloseTo(weights.synergyWeight * pairs, 0);
     }
   });
 
