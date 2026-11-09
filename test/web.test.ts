@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import draftJson from "../config/draft.json";
 import type { DraftConfig } from "../src/engine/types.js";
 import type { StaticBrawler } from "../src/outputs/static.js";
-import { add, expectedTarget, myPickId, newDraft, nextSlot, remove, type DraftState } from "../web/src/draftState.js";
+import { add, draftFromLink, draftLink, expectedTarget, myPickId, newDraft, nextSlot, parseDraftLink, remove, type DraftState } from "../web/src/draftState.js";
 import { parseEntry, search } from "../web/src/search.js";
 
 const order = (draftJson as unknown as DraftConfig).order;
@@ -86,5 +86,35 @@ describe("search", () => {
     expect(parseEntry("+ gene")).toEqual({ target: "ally", query: "gene" });
     expect(parseEntry("!colt")).toEqual({ target: "ban", query: "colt" });
     expect(parseEntry("bull")).toEqual({ query: "bull" });
+  });
+});
+
+describe("draft links", () => {
+  const base = "https://example.github.io/coach/";
+  const draft = { mapId: 15000367, mySlot: 4, bans: [43], allies: [1], enemies: [3, 31] };
+
+  it("round-trips a draft through a link", () => {
+    const link = draftLink(base, draft);
+    expect(link).toBe(`${base}#map=15000367&slot=4&bans=43&allies=1&enemies=3,31`);
+    expect(parseDraftLink(new URL(link).hash)).toEqual(draft);
+    // Empty lists are left out, and come back empty.
+    expect(parseDraftLink(new URL(draftLink(base, { ...draft, bans: [], allies: [], enemies: [] })).hash)).toEqual({ ...draft, bans: [], allies: [], enemies: [] });
+  });
+
+  it("ignores links without a draft or with a bad map or slot", () => {
+    expect(parseDraftLink("")).toBeNull();
+    expect(parseDraftLink("#slot=4")).toBeNull();
+    expect(parseDraftLink("#map=15000367&slot=7")).toBeNull();
+    expect(parseDraftLink("#map=abc&slot=1")).toBeNull();
+  });
+
+  it("starts a fresh draft from a link, through the usual rules", () => {
+    const s = draftFromLink({ mapId: 1, mySlot: 6, bans: [9, 9], allies: [1, 2, 3], enemies: [4, 5, 6, 7, 99] }, (id) => id !== 99);
+    expect(s.mapId).toBe(1);
+    expect(s.mySlot).toBe(6);
+    expect(s.bans).toEqual([9]); // repeated ban dropped
+    expect(s.picks.filter((p) => p.side === "ally").map((p) => p.id)).toEqual([1, 2, 3]);
+    expect(s.picks.filter((p) => p.side === "enemy").map((p) => p.id)).toEqual([4, 5, 6]); // team full, unknown id dropped
+    expect(s.frozen).toBeNull();
   });
 });

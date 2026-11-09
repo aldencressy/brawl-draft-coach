@@ -103,3 +103,48 @@ export function remove(s: DraftState, id: number): DraftState {
 export function isComplete(s: DraftState): boolean {
   return s.picks.length >= PICKS;
 }
+
+/** A draft as it travels in a link: ids only, so names with spaces or dots can't break it. */
+export interface DraftLink {
+  mapId: number;
+  mySlot: number;
+  bans: number[];
+  allies: number[];
+  enemies: number[];
+}
+
+/** The coach's address with a draft filled in: `#map=…&slot=…&bans=…&allies=…&enemies=…`. */
+export function draftLink(base: string, d: DraftLink): string {
+  const parts = [`map=${d.mapId}`, `slot=${d.mySlot}`];
+  for (const [key, ids] of [["bans", d.bans], ["allies", d.allies], ["enemies", d.enemies]] as const) if (ids.length) parts.push(`${key}=${ids.join(",")}`);
+  return `${base.split("#")[0]}#${parts.join("&")}`;
+}
+
+/** Reads a draft from a link's `#…` part, or null if it doesn't carry one. */
+export function parseDraftLink(hash: string): DraftLink | null {
+  const params = new URLSearchParams(hash.replace(/^#/, ""));
+  const mapId = Number(params.get("map"));
+  const mySlot = Number(params.get("slot"));
+  if (!Number.isInteger(mapId) || mapId <= 0 || !Number.isInteger(mySlot) || mySlot < 1 || mySlot > PICKS) return null;
+  const ids = (key: string) => (params.get(key) ?? "").split(",").map(Number).filter((n) => Number.isInteger(n) && n > 0);
+  return { mapId, mySlot, bans: ids("bans"), allies: ids("allies"), enemies: ids("enemies") };
+}
+
+/**
+ * A fresh draft from a link, entered through the usual rules (so a full team or a repeated brawler
+ * is dropped, not trusted). `known` filters out ids this data doesn't have.
+ */
+export function draftFromLink(link: DraftLink, known: (id: number) => boolean): DraftState {
+  let s: DraftState = { ...newDraft(), mapId: link.mapId, mySlot: link.mySlot };
+  const put = (ids: number[], target: Target) => {
+    for (const id of ids) {
+      if (!known(id)) continue;
+      const r = add([], s, id, target);
+      if (r.ok) s = r.state;
+    }
+  };
+  put(link.bans, "ban");
+  put(link.allies, "ally");
+  put(link.enemies, "enemy");
+  return s;
+}

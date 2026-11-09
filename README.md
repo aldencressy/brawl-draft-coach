@@ -313,7 +313,11 @@ npm run suggest                                   # lists current ranked maps
 npm run suggest -- --map "hard rock" --slot 6 --ally gene,emz --enemy mortis,crow,bull --ban colt,spike
 ```
 
-Add `--json` to see the full output. To refresh the data later: `rm -rf data` and clone again.
+Add `--json` to see the full output, or `--link` to also print a link that opens the coach with
+this draft filled in (map, your slot, bans and picks; `COACH_URL` changes the site). The link
+looks like `…/brawl-draft-coach/#map=15000367&slot=4&bans=16000043&allies=16000001&enemies=16000003,16000031`
+(brawler and map ids). Opening it starts a fresh draft with those entries, then clears them from the
+address bar so a refresh keeps your edits. To refresh the data later: `rm -rf data` and clone again.
 
 Checks worth running after changing weights:
 

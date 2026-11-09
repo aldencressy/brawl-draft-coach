@@ -5,6 +5,7 @@
 //   --slot   your overall pick slot, 1-6 (default 1)
 //   --ally / --enemy / --ban   comma-separated brawler names
 //   --json   print the full Recommendation (what the AI layer will receive)
+//   --link   also print a link that opens the coach with this draft filled in (COACH_URL to change the site)
 //   --all    top picks on every current ranked map at --slot (a quick sanity check after tuning)
 //   --calibration   with --map: average counter/pair edge against the map's most-picked brawlers.
 //                   Each should be near 0; a consistent offset means the model is biased.
@@ -18,6 +19,7 @@ import { StatsModel } from "../src/engine/model.js";
 import { recommend } from "../src/engine/recommend.js";
 import type { DraftConfig, EngineData, Weights } from "../src/engine/types.js";
 import { nameKey } from "../src/outputs/static.js";
+import { draftLink } from "../web/src/draftState.js";
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(`--${name}`);
@@ -102,18 +104,14 @@ function brawlers(list: string | undefined): number[] {
     });
 }
 
-const rec = recommend(
-  {
-    mapId: map.id,
-    mySlot: Number(arg("slot") ?? 1),
-    bans: brawlers(arg("ban")),
-    allies: brawlers(arg("ally")),
-    enemies: brawlers(arg("enemy")),
-  },
-  data,
-  weights,
-  order,
-);
+const draft = {
+  mapId: map.id,
+  mySlot: Number(arg("slot") ?? 1),
+  bans: brawlers(arg("ban")),
+  allies: brawlers(arg("ally")),
+  enemies: brawlers(arg("enemy")),
+};
+const rec = recommend(draft, data, weights, order);
 
 if (process.argv.includes("--json")) {
   console.log(JSON.stringify(rec, null, 2));
@@ -139,3 +137,6 @@ for (const [i, x] of rec.candidates.slice(0, rec.showTop).entries()) {
   if (x.build) console.log(`   Build: ${[x.build.gadget, x.build.starPower, ...x.build.gears].filter(Boolean).join(", ")}${x.build.note ? ` (${x.build.note})` : ""}`);
 }
 console.log(`\nNext: ${rec.candidates.slice(rec.showTop).map((x) => `${x.name} ${x.score}`).join(", ")}`);
+if (process.argv.includes("--link")) {
+  console.log(`\nOpen in the coach: ${draftLink(process.env.COACH_URL || "https://aldencressy.github.io/brawl-draft-coach/", draft)}`);
+}

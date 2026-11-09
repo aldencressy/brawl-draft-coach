@@ -10,6 +10,7 @@ import type { StaticBrawler, StaticData } from "../../src/outputs/static.js";
 import type { StatsData } from "../../src/outputs/stats.js";
 import {
   add,
+  draftFromLink,
   expectedTarget,
   isComplete,
   isTaken,
@@ -17,6 +18,7 @@ import {
   myTeam,
   newDraft,
   nextSlot,
+  parseDraftLink,
   remove,
   sideOfSlot,
   type DraftState,
@@ -720,8 +722,31 @@ setInterval(() => {
   if (state.mapId && state.mySlot) renderHeader();
 }, 60_000);
 
+/** A draft in the link (`#map=…&slot=…`), e.g. from `npm run suggest -- --link`: start it fresh. */
+function applyLinkedDraft(): void {
+  const link = parseDraftLink(location.hash);
+  if (!link) return;
+  window.history.replaceState(null, "", location.pathname + location.search);
+  if (!mapOf(link.mapId)) return say("That link's map isn't in the data", true);
+  if (!state.loggedAt && myPickId(order, state) !== null) logDraft(state);
+  setState(draftFromLink(link, (id) => byId.has(id)), false);
+  history = [];
+  resetAi();
+  ui = { ...ui, query: "", active: 0, override: null };
+  say("Draft loaded from link");
+}
+
+window.addEventListener("hashchange", () => {
+  if (!data) return;
+  applyLinkedDraft();
+  render();
+});
+
 loadData()
-  .then(render)
+  .then(() => {
+    applyLinkedDraft();
+    render();
+  })
   .catch((err: unknown) => {
     app.innerHTML = `<p class="error">${esc(err instanceof Error ? err.message : String(err))}</p>`;
   });
