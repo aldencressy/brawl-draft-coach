@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import draftJson from "../config/draft.json";
 import type { DraftConfig } from "../src/engine/types.js";
 import type { StaticBrawler } from "../src/outputs/static.js";
-import { add, draftFromLink, draftLink, expectedTarget, myPickId, newDraft, nextSlot, parseDraftLink, remove, type DraftState } from "../web/src/draftState.js";
+import { add, draftFromLink, draftLink, expectedTarget, myPickId, newDraft, nextSlot, parseDraftLink, remove, teammateSlot, type DraftState } from "../web/src/draftState.js";
 import { parseEntry, search } from "../web/src/search.js";
 
 const order = (draftJson as unknown as DraftConfig).order;
@@ -116,5 +116,29 @@ describe("draft links", () => {
     expect(s.picks.filter((p) => p.side === "ally").map((p) => p.id)).toEqual([1, 2, 3]);
     expect(s.picks.filter((p) => p.side === "enemy").map((p) => p.id)).toEqual([4, 5, 6]); // team full, unknown id dropped
     expect(s.frozen).toBeNull();
+  });
+});
+
+describe("teammate's pick", () => {
+  it("is your team's next slot once your pick is in", () => {
+    // Pick 1 (first team picks 1, 4, 5): nothing to suggest for a teammate until you've picked.
+    let s = at(1);
+    expect(teammateSlot(order, s)).toBeNull();
+    s = enter(s, [1], "ally");
+    expect(teammateSlot(order, s)).toBe(4);
+    s = enter(enter(s, [2, 3], "enemy"), [4], "ally");
+    expect(teammateSlot(order, s)).toBe(5);
+    s = enter(s, [5], "ally");
+    expect(teammateSlot(order, s)).toBeNull(); // your team is complete
+  });
+
+  it("counts teammates who picked before you", () => {
+    // Pick 4: a teammate already took pick 1, so after yours the next is pick 5.
+    const s = enter(enter(enter(at(4), [1], "ally"), [2, 3], "enemy"), [4], "ally");
+    expect(myPickId(order, s)).toBe(4);
+    expect(teammateSlot(order, s)).toBe(5);
+    // Pick 5 is your team's last, so there's no teammate left after it.
+    const last = enter(enter(enter(at(5), [1], "ally"), [2, 3], "enemy"), [4, 5], "ally");
+    expect(teammateSlot(order, last)).toBeNull();
   });
 });

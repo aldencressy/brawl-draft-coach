@@ -19,6 +19,7 @@ import {
   newDraft,
   nextSlot,
   parseDraftLink,
+  teammateSlot,
   remove,
   sideOfSlot,
   type DraftState,
@@ -118,24 +119,30 @@ function brawlersForMap(mapId: number): StaticBrawler[] {
 // ---------- engine ----------
 
 /**
- * Suggestions for your slot. Once you've picked they're frozen as they were at that moment:
- * later picks can't change your choice, and the weights for your slot only make sense then.
+ * Suggestions for whoever on your team picks next: you, until your pick is in; then your next
+ * teammate, so you can call out a pick for them. Once your team has all three, the suggestions
+ * from when you picked come back.
  */
 function suggestions(): Recommendation | null {
-  if (!state.mapId || !state.mySlot) return null;
-  const mine = myPickId(order, state);
-  if (mine !== null && state.frozen?.pick === mine) return state.frozen.rec;
-  return recommend(currentDraft()!, data, weights, { order });
+  const target = suggestionTarget();
+  if (!target) return state.frozen?.pick === myPickId(order, state) ? (state.frozen?.rec ?? null) : null;
+  // A teammate can pick any brawler, and your own record says nothing about theirs.
+  const pool = target.teammate ? { ...data, roster: undefined } : data;
+  return recommend(target.draft, pool, weights, { order });
 }
 
-/** The draft as the engine sees it, leaving out your own pick once it's in. */
-function currentDraft(): Draft | null {
+/** The draft as the engine sees it for the pick being suggested, or null when there's none left. */
+function suggestionTarget(): { draft: Draft; teammate: boolean } | null {
   if (!state.mapId || !state.mySlot) return null;
-  const mine = myPickId(order, state);
-  const allies = state.picks.filter((p) => p.side === "ally" && p.id !== mine).map((p) => p.id);
+  const allies = state.picks.filter((p) => p.side === "ally").map((p) => p.id);
   const enemies = state.picks.filter((p) => p.side === "enemy").map((p) => p.id);
-  return { mapId: state.mapId, mySlot: state.mySlot, bans: state.bans, allies, enemies };
+  const base = { mapId: state.mapId, bans: state.bans, enemies };
+  if (myPickId(order, state) === null) return { draft: { ...base, mySlot: state.mySlot, allies }, teammate: false };
+  const slot = teammateSlot(order, state);
+  return slot ? { draft: { ...base, mySlot: slot, allies }, teammate: true } : null;
 }
+
+const currentDraft = (): Draft | null => suggestionTarget()?.draft ?? null;
 
 /**
  * Bans that would change your pick, worked out just after the suggestions are drawn (it takes a
@@ -146,7 +153,7 @@ let hintTimer: ReturnType<typeof setTimeout> | undefined;
 
 function hintsFor(rec: Recommendation): BanHints | undefined {
   const draft = currentDraft();
-  if (!draft || myPickId(order, state) !== null || !rec.context.enemyPicksAfterMine) return undefined;
+  if (!draft || !rec.context.enemyPicksAfterMine) return undefined;
   const key = JSON.stringify(draft);
   const cached = hintCache.get(key);
   if (cached) return cached;
@@ -461,15 +468,19 @@ function renderSuggestions(rec: Recommendation | null): void {
   const c = rec.context;
   const shown = rec.candidates.slice(0, rec.showTop);
   const rest = rec.candidates.slice(rec.showTop);
-  const myRank = mine !== null ? rec.candidates.findIndex((x) => x.id === mine) : -1;
+  const teammate = mine !== null && rec.context.mySlot !== state.mySlot;
+  // Where your pick ranked when you made it.
+  const atMyPick = state.frozen?.pick === mine ? state.frozen.rec : rec;
+  const myRank = mine !== null ? atMyPick.candidates.findIndex((x) => x.id === mine) : -1;
   const hints = hintsFor(rec);
+  const after = c.enemyPicksAfterMine ? `${c.enemyPicksAfterMine} enemy pick${c.enemyPicksAfterMine > 1 ? "s" : ""} after` : "last word";
 
   el.innerHTML = `
-    <h2><span>Your pick</span><span>${c.enemyPicksAfterMine ? `${c.enemyPicksAfterMine} enemy pick${c.enemyPicksAfterMine > 1 ? "s" : ""} after you` : "last word"}</span></h2>
+    <h2><span>${teammate ? `Teammate's pick (pick ${c.mySlot})` : "Your pick"}</span><span>${after}${teammate ? "" : c.enemyPicksAfterMine ? " you" : ""}</span></h2>
     <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}</div>
-    ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
+    ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${teammate ? ` Now suggesting for your teammate's pick, from every brawler.` : state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
     ${banChipsHtml(hints)}
-    ${shown.map((x, i) => candidateHtml(x, i, x.id === mine, i === 0 ? hints?.ifTopBanned : undefined)).join("")}
+    ${shown.map((x, i) => candidateHtml(x, i, !teammate && x.id === mine, i === 0 ? hints?.ifTopBanned : undefined, !teammate)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
     ${!rec.candidates.length ? `<div class="done">Nothing left to suggest from your roster.</div>` : ""}`;
   el.querySelectorAll<HTMLElement>("[data-ban]").forEach((b) =>
@@ -486,7 +497,7 @@ function banChipsHtml(hints: BanHints | undefined): string {
   return `<div class="banchips"><span>If banned (tap to update):</span>${chips}</div>`;
 }
 
-function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean, ifBanned?: { name: string }): string {
+function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean, ifBanned?: { name: string }, forYou = true): string {
   const parts = Object.entries(x.parts)
     .filter(([, v]) => v !== 0)
     .map(([k, v]) => `<span class="${v > 0 ? "p" : "n"}">${k} ${signed(v)}</span>`)
@@ -505,7 +516,7 @@ function candidateHtml(x: ScoredCandidate, i: number, isMine: boolean, ifBanned?
       ${ifBanned ? `<span class="ifban"><button class="banchip" data-ban="${x.id}" title="Tap if ${esc(x.name)} is banned">If banned</button> → ${esc(ifBanned.name)}</span>` : ""}
       ${answersHtml(x)}
       ${x.warning ? `<span class="warn">⚠ ${esc(x.warning)}</span>` : ""}
-      ${kitHtml(x.id)}
+      ${kitHtml(x.id, forYou)}
       <span class="parts">${parts}</span>
     </div>
   </div>`;
@@ -522,10 +533,11 @@ function answersHtml(x: ScoredCandidate): string {
  * The brawler's gadgets and star powers with the recommended one marked and the ones you don't
  * own dimmed, then the recommended gears. Hover an item for its description.
  */
-function kitHtml(id: number): string {
+function kitHtml(id: number, forYou = true): string {
   const b = byId.get(id);
   if (!b) return "";
-  const mine = data.roster?.brawlers.find((r) => r.id === id);
+  // For a teammate's pick, your own items don't apply.
+  const mine = forYou ? data.roster?.brawlers.find((r) => r.id === id) : undefined;
   const owns = (kind: "gadgets" | "starPowers" | "gears", itemId: number) => !mine || mine[kind].includes(itemId);
   const alternatives = new Set(b.build?.alternatives ?? []);
   const chip = (item: { id: number; name: string; description?: string }, kind: "gadgets" | "starPowers" | "gears", recommended: boolean) => {

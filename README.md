@@ -185,9 +185,12 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.
 - Items you don't own are struck through, with a note if the recommended build needs one.
 
-After you lock in, the suggestions freeze as they were at that moment, with your pick marked
-and where it ranked. Later picks don't change them: your choice is made, and the weights for
-your slot only make sense at the moment you pick.
+After you lock in, the panel moves on to your **teammate's next pick** ("Teammate's pick (pick 5)"),
+so you can call one out for them. It updates as picks and bans come in, considers every brawler
+(not just the ones you own), and leaves out your own record and items. Ban chips work the same way.
+Once your team has all three picks, the panel goes back to your own suggestions as they were when
+you picked, with your pick marked and where it ranked. That snapshot is also what the draft log
+keeps. The AI second opinion stays on your own pick.
 
 **Draft log:** each draft with your pick is saved in the browser: map, slot, bans, picks, your
 pick and the suggestions at that moment. "Export draft log" downloads it as JSON, for checking later

@@ -59,6 +59,17 @@ export function sideOfSlot(order: DraftConfig["order"], mySlot: number, slot: nu
   return order[slot - 1] === myTeam(order, mySlot) ? "ally" : "enemy";
 }
 
+/**
+ * Once your pick is in: the overall slot of your team's next pick still to make (a teammate's), or
+ * null if your team has picked all three. Picks before yours fill your team's earlier slots.
+ */
+export function teammateSlot(order: DraftConfig["order"], s: DraftState): number | null {
+  if (!s.mySlot || myPickId(order, s) === null) return null;
+  const team = myTeam(order, s.mySlot);
+  const allySlots = order.flatMap((t, i) => (t === team ? [i + 1] : []));
+  return allySlots[s.picks.filter((p) => p.side === "ally").length] ?? null;
+}
+
 /** Where an entry goes when you don't say: the next pick in draft order. */
 export function expectedTarget(order: DraftConfig["order"], s: DraftState): Side | null {
   const slot = nextSlot(order, s);
