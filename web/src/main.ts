@@ -479,6 +479,7 @@ function renderSuggestions(rec: Recommendation | null): void {
     <h2><span>${teammate ? `Teammate's pick (pick ${c.mySlot})` : "Your pick"}</span><span>${after}${teammate ? "" : c.enemyPicksAfterMine ? " you" : ""}</span></h2>
     <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}</div>
     ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${teammate ? ` Now suggesting for your teammate's pick, from every brawler.` : state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
+    ${bestCounterHtml(rec)}
     ${banChipsHtml(hints)}
     ${shown.map((x, i) => candidateHtml(x, i, !teammate && x.id === mine, i === 0 ? hints?.ifTopBanned : undefined, !teammate)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
@@ -486,6 +487,14 @@ function renderSuggestions(rec: Recommendation | null): void {
   el.querySelectorAll<HTMLElement>("[data-ban]").forEach((b) =>
     b.addEventListener("click", () => enter(Number(b.dataset.ban), "ban")),
   );
+}
+
+/** The best pure counter to their team, so it's always in view even when it doesn't rank first. */
+function bestCounterHtml(rec: Recommendation): string {
+  const b = rec.bestCounter;
+  if (!b) return "";
+  const where = b.rank === 1 ? "also the #1 pick" : `#${b.rank} overall, ${signed(b.score)}`;
+  return `<div class="bestcounter">Best counter to their team: <b>${esc(b.name)}</b> <span class="p">+${b.points}</span> <span>(${where})</span></div>`;
 }
 
 /** One-tap bans: only the ones that would change your pick. */

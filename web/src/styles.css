@@ -133,6 +133,9 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .parts { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .parts .p { color: var(--good); }
 .parts .n { color: var(--bad); }
+.bestcounter { color: var(--muted); font-size: 12px; }
+.bestcounter b { color: var(--text); }
+.bestcounter .p { color: var(--good); font-weight: 600; }
 .banchips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
 .banchip { font: inherit; font-size: 12px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; }
 .banchip span { color: var(--muted); }

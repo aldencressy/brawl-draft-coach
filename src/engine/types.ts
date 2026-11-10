@@ -139,4 +139,10 @@ export interface Recommendation {
   /** Best first. The UI shows the first `showTop`; the AI layer gets all of them. */
   candidates: ScoredCandidate[];
   showTop: number;
+  /**
+   * Once the enemy has picked: the candidate with the biggest matchup edge against them (its
+   * `counter` part, in points), its overall rank and score. Shown so a pure counter pick is always
+   * visible; the ranking itself weighs matchups and map strength as real results do.
+   */
+  bestCounter?: { id: number; name: string; points: number; rank: number; score: number };
 }

@@ -180,6 +180,9 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 
 - **Gadget** and **Star power**: all of its options, with the recommended one in gold and a close
   second dashed. Hover an item for its description.
+- **Best counter to their team** (once the enemy has picked): the brawler with the biggest matchup
+  edge against all their picks, with where it ranks overall, so a pure counter pick is always in
+  view. The ranking itself weighs matchups and map strength the way real results do (see Backtest).
 - **Likely answers** (early picks): the enemy's likeliest picks after yours that do well against
   it, with how many points each costs you.
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.
@@ -349,7 +352,10 @@ What it has found so far (Nov 6 and 7, 40,000 games each): the engine picks the 
 of the time from the draft alone. Map strength and counters are weighted right (best fits about
 1.0 and 1.1–1.2); counting counters half or 1.5× as much predicts worse. Teammate pairs were
 counted about twice as much as they deserve, hence `synergyWeight: 0.5`. Removing matchup luck
-from map strength predicts better than leaving it in. Role fit and your own record aren't in the
+from map strength predicts better than leaving it in. Matchups per map (instead of per mode) were
+also tested, from 160,000 sampled games: maps of the same mode differ from the mode-wide matchup
+by no more than chance, and predictions didn't change on any of four days, so matchups stay per
+mode. Role fit and your own record aren't in the
 backtest, since game results can't measure them.
 
 ## Without a key: mock server

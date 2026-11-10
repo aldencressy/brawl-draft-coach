@@ -73,6 +73,18 @@ describe("recommend: sample drafts", () => {
     expect(prey.points).toBeGreaterThan(4);
   });
 
+  it("names the best counter to the enemies on the board, with its overall rank", () => {
+    // Against their whole team (all three enemies), not just the biggest single counter.
+    const rec = run({ mySlot: 6, allies: [B.Filler1, B.TwinA], enemies: [B.Prey, B.Filler2, B.Tank] }, { ...weights, handOffTop: 20 });
+    const best = [...rec.candidates].sort((a, b) => b.parts.counter - a.parts.counter)[0]!;
+    expect(rec.bestCounter?.id).toBe(best.id);
+    expect(rec.bestCounter!.points).toBe(best.parts.counter);
+    expect(rec.bestCounter!.rank).toBe(rankOf(rec, best.id) + 1);
+    expect(rec.bestCounter!.score).toBe(best.score);
+    // Nothing to counter before the enemy has picked.
+    expect(run({ mySlot: 1 }).bestCounter).toBeUndefined();
+  });
+
   it("pick 4 with TwinA on the team: TwinB comes first, paired with TwinA", () => {
     // Pairs at full weight: this world plants a big pair effect, and the test is that the engine finds
     // it. (On real data pairs count half, see synergyWeight.)

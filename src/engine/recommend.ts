@@ -162,6 +162,14 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
 
   scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
+  // The best pure counter to the enemies on the board, whatever its overall rank.
+  let bestCounter: Recommendation["bestCounter"];
+  if (draft.enemies.length) {
+    const i = scored.reduce((best, c, j) => (c.parts.counter > scored[best]!.parts.counter ? j : best), 0);
+    const c = scored[i];
+    if (c && c.parts.counter > 0) bestCounter = { id: c.id, name: c.name, points: c.parts.counter, rank: i + 1, score: c.score };
+  }
+
   return {
     version: 1,
     context: {
@@ -184,6 +192,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     },
     candidates: scored.slice(0, Math.max(weights.handOffTop, weights.showTop)),
     showTop: weights.showTop,
+    ...(bestCounter ? { bestCounter } : {}),
   };
 }
 
