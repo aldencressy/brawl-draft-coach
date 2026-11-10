@@ -20,6 +20,9 @@ import { enemyPicksAfter, teamOfSlot } from "./draft.js";
 import { StatsModel, cautious, type Edge } from "./model.js";
 import type { Draft, DraftConfig, EngineData, MetaPick, Part, PairDetail, Recommendation, ScoredCandidate, Team, Weights } from "./types.js";
 
+/** How many of the best counters to their team to list. */
+const BEST_COUNTERS = 3;
+
 const points = (p: number) => Math.round(p * 1000) / 10 || 0; // 0.0234 -> 2.3, and no -0
 
 export function recommend(draft: Draft, data: EngineData, weights: Weights, draftConfig: DraftConfig): Recommendation {
@@ -162,13 +165,14 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
 
   scored.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
-  // The best pure counter to the enemies on the board, whatever its overall rank.
-  let bestCounter: Recommendation["bestCounter"];
-  if (draft.enemies.length) {
-    const i = scored.reduce((best, c, j) => (c.parts.counter > scored[best]!.parts.counter ? j : best), 0);
-    const c = scored[i];
-    if (c && c.parts.counter > 0) bestCounter = { id: c.id, name: c.name, points: c.parts.counter, rank: i + 1, score: c.score };
-  }
+  // The best pure counters to the enemies on the board, whatever their overall rank.
+  const bestCounters: NonNullable<Recommendation["bestCounters"]> = draft.enemies.length
+    ? scored
+        .map((c, i) => ({ id: c.id, name: c.name, points: c.parts.counter, rank: i + 1, score: c.score }))
+        .filter((c) => c.points > 0)
+        .sort((a, b) => b.points - a.points || a.rank - b.rank)
+        .slice(0, BEST_COUNTERS)
+    : [];
 
   return {
     version: 1,
@@ -192,7 +196,7 @@ export function recommend(draft: Draft, data: EngineData, weights: Weights, draf
     },
     candidates: scored.slice(0, Math.max(weights.handOffTop, weights.showTop)),
     showTop: weights.showTop,
-    ...(bestCounter ? { bestCounter } : {}),
+    ...(bestCounters.length ? { bestCounters } : {}),
   };
 }
 

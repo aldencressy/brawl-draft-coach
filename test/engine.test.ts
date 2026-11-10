@@ -73,16 +73,20 @@ describe("recommend: sample drafts", () => {
     expect(prey.points).toBeGreaterThan(4);
   });
 
-  it("names the best counter to the enemies on the board, with its overall rank", () => {
+  it("lists the best counters to the enemies on the board, with their overall ranks", () => {
     // Against their whole team (all three enemies), not just the biggest single counter.
     const rec = run({ mySlot: 6, allies: [B.Filler1, B.TwinA], enemies: [B.Prey, B.Filler2, B.Tank] }, { ...weights, handOffTop: 20 });
-    const best = [...rec.candidates].sort((a, b) => b.parts.counter - a.parts.counter)[0]!;
-    expect(rec.bestCounter?.id).toBe(best.id);
-    expect(rec.bestCounter!.points).toBe(best.parts.counter);
-    expect(rec.bestCounter!.rank).toBe(rankOf(rec, best.id) + 1);
-    expect(rec.bestCounter!.score).toBe(best.score);
+    const best = [...rec.candidates].filter((c) => c.parts.counter > 0).sort((a, b) => b.parts.counter - a.parts.counter).slice(0, 3);
+    expect(rec.bestCounters?.map((c) => c.id)).toEqual(best.map((c) => c.id));
+    expect(rec.bestCounters!.length).toBeGreaterThan(1);
+    for (const c of rec.bestCounters!) {
+      const cand = rec.candidates.find((x) => x.id === c.id)!;
+      expect(c.points).toBe(cand.parts.counter);
+      expect(c.rank).toBe(rankOf(rec, c.id) + 1);
+      expect(c.score).toBe(cand.score);
+    }
     // Nothing to counter before the enemy has picked.
-    expect(run({ mySlot: 1 }).bestCounter).toBeUndefined();
+    expect(run({ mySlot: 1 }).bestCounters).toBeUndefined();
   });
 
   it("pick 4 with TwinA on the team: TwinB comes first, paired with TwinA", () => {
