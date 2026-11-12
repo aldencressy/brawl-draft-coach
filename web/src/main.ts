@@ -479,14 +479,14 @@ function renderSuggestions(rec: Recommendation | null): void {
   el.innerHTML = `
     <h2><span>${teammate ? `Teammate's pick (pick ${c.mySlot})` : "Your pick"}</span><span>${after}${teammate ? "" : c.enemyPicksAfterMine ? " you" : ""}</span></h2>
     <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}
-      <button id="copychat" class="copychat" title="Copies the draft and these numbers, to paste into a Claude chat">Copy for Claude</button></div>
+      <button id="copychat" class="copychat" title="Copies the map, bans, your pick slot and the picks so far, to paste into a Claude chat">Copy for Claude</button></div>
     ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${teammate ? ` Now suggesting for your teammate's pick, from every brawler.` : state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
     ${bestCountersHtml(rec)}
     ${banChipsHtml(hints)}
     ${shown.map((x, i) => candidateHtml(x, i, !teammate && x.id === mine, i === 0 ? hints?.ifTopBanned : undefined, !teammate)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
     ${!rec.candidates.length ? `<div class="done">Nothing left to suggest from your roster.</div>` : ""}`;
-  document.getElementById("copychat")!.onclick = () => void copyForClaude(chatMessage(rec, { teammate, hints }));
+  document.getElementById("copychat")!.onclick = () => void copyForClaude(chatMessage(rec, { teammate }));
   el.querySelectorAll<HTMLElement>("[data-ban]").forEach((b) =>
     b.addEventListener("click", () => enter(Number(b.dataset.ban), "ban")),
   );
