@@ -183,6 +183,10 @@ rate, games and pick rate on the map, the score breakdown, and its build:
 - **Best counters to their team** (once the enemy has picked): the three brawlers with the biggest
   matchup edge against all their picks, each with where it ranks overall, so pure counter picks are
   always in view. The ranking itself weighs matchups and map strength the way real results do (see Backtest).
+- **Copy for Claude**: copies the draft and these numbers (top 8 candidates with their parts,
+  matchups and likely answers, best counters, ban hints) with short answer instructions, to paste
+  into a normal Claude chat. Uses your Claude subscription, no API key; the chat reasons about
+  composition and the map with the engine's numbers as evidence.
 - **Likely answers** (early picks): the enemy's likeliest picks after yours that do well against
   it, with how many points each costs you.
 - **Gears**: the two recommended ones, plus Hypercharge if you own it.

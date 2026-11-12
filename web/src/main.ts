@@ -25,6 +25,7 @@ import {
   type DraftState,
   type Target,
 } from "./draftState.js";
+import { chatMessage } from "../../src/ai/chat.js";
 import { draftKey, type AiTake } from "../../src/ai/prompt.js";
 import { aiConfig, askAi, isAbort, loadAiSettings, saveAiSettings } from "./ai.js";
 import { parseEntry, search } from "./search.js";
@@ -477,13 +478,15 @@ function renderSuggestions(rec: Recommendation | null): void {
 
   el.innerHTML = `
     <h2><span>${teammate ? `Teammate's pick (pick ${c.mySlot})` : "Your pick"}</span><span>${after}${teammate ? "" : c.enemyPicksAfterMine ? " you" : ""}</span></h2>
-    <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}</div>
+    <div class="ctx">${rec.data.mapGames.toLocaleString()} games on this map${rec.data.mapGames < 300 ? " · thin data, treat as a rough guide" : ""}
+      <button id="copychat" class="copychat" title="Copies the draft and these numbers, to paste into a Claude chat">Copy for Claude</button></div>
     ${mine !== null ? `<div class="done">You locked in <b>${esc(nameOf(mine))}</b>${myRank >= 0 ? ` (#${myRank + 1} suggestion)` : ""}.${teammate ? ` Now suggesting for your teammate's pick, from every brawler.` : state.frozen?.pick === mine ? " These are the suggestions from when you picked." : ""}</div>` : ""}
     ${bestCountersHtml(rec)}
     ${banChipsHtml(hints)}
     ${shown.map((x, i) => candidateHtml(x, i, !teammate && x.id === mine, i === 0 ? hints?.ifTopBanned : undefined, !teammate)).join("")}
     ${rest.length ? `<div class="next-up">Also: ${rest.map((x) => `${esc(x.name)} ${signed(x.score)}`).join(" · ")}</div>` : ""}
     ${!rec.candidates.length ? `<div class="done">Nothing left to suggest from your roster.</div>` : ""}`;
+  document.getElementById("copychat")!.onclick = () => void copyForClaude(chatMessage(rec, { teammate, hints }));
   el.querySelectorAll<HTMLElement>("[data-ban]").forEach((b) =>
     b.addEventListener("click", () => enter(Number(b.dataset.ban), "ban")),
   );
@@ -496,6 +499,26 @@ function bestCountersHtml(rec: Recommendation): string {
   const item = (b: (typeof list)[number]) =>
     `<span class="bc"><b>${esc(b.name)}</b> <span class="p">+${b.points}</span> <span>(#${b.rank}${b.rank === 1 ? ", top pick" : ""})</span></span>`;
   return `<div class="bestcounter">Best counters to their team: ${list.map(item).join(" · ")}</div>`;
+}
+
+/** Copies the draft for pasting into a Claude chat, falling back to a text selection where the clipboard is blocked. */
+async function copyForClaude(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    if (!ok) {
+      say("Couldn't copy: your browser blocked the clipboard", true);
+      return render();
+    }
+  }
+  say("Copied. Paste it into a Claude chat");
+  render();
 }
 
 /** One-tap bans: only the ones that would change your pick. */

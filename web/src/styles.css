@@ -133,6 +133,8 @@ header .actions { margin-left: auto; display: flex; gap: 8px; }
 .parts { display: flex; gap: 8px; flex-wrap: wrap; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
 .parts .p { color: var(--good); }
 .parts .n { color: var(--bad); }
+.copychat { float: right; font: inherit; font-size: 12px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--gold); background: transparent; color: var(--gold); cursor: pointer; }
+.copychat:hover { background: rgba(245, 184, 46, .12); }
 .bestcounter { color: var(--muted); font-size: 12px; }
 .bestcounter b { color: var(--text); }
 .bestcounter .bc { white-space: nowrap; }
